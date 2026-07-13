@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Scratchpad - NeuroCLI</title>
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Markdown Renderer -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Prism.js for Code Highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="scratchpad.css">
+</head>
+<body class="dark-theme">
+    
+    <div class="app-container">
+        <!-- Main Scratchpad Area -->
+        <main class="scratchpad-main">
+            <header class="scratchpad-header">
+                <a href="chat.html" class="back-btn"><i class="ph ph-arrow-left"></i> Back to Chat</a>
+                <h2><i class="ph ph-scribble-loop"></i> AI Interactive Scratchpad</h2>
+                <div class="header-tools">
+                    <button id="clear-btn" class="tool-btn danger" title="Clear Canvas"><i class="ph ph-trash"></i></button>
+                    <button id="analyze-btn" class="tool-btn primary"><i class="ph ph-magic-wand"></i> Analyze Scribble</button>
+                </div>
+            </header>
+
+            <div class="canvas-container">
+                <canvas id="drawing-canvas"></canvas>
+                <div class="drawing-tools">
+                    <button class="draw-tool active" data-tool="pen" title="Pen"><i class="ph ph-pen"></i></button>
+                    <button class="draw-tool" data-tool="eraser" title="Eraser"><i class="ph ph-eraser"></i></button>
+                    <div class="color-picker-container">
+                        <input type="color" id="color-picker" value="#ffffff">
+                    </div>
+                    <input type="range" id="size-picker" min="1" max="20" value="6">
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Side Panel for Results -->
+        <aside class="results-panel">
+            <div class="results-header">
+                <h3><i class="ph ph-brain"></i> AI Analysis</h3>
+            </div>
+            <div class="results-content" id="results-content">
+                <div class="empty-state">
+                    <i class="ph ph-pencil-line"></i>
+                    <p>Draw something on the canvas and click <b>Analyze Scribble</b> to see the AI magic happen.</p>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="scratchpad.js"></script>
+</body>
+</html>
+
+
+
+

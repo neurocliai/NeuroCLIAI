@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symptom Checker — NeuroCLI AI</title>
+    <link rel="stylesheet" href="modules.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <style>
+        .main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0; overflow: hidden; background: var(--bg-primary); }
+        .intake-panel { padding: 40px; border-right: 1px solid var(--border-color); overflow-y: auto; }
+        .chat-panel { padding: 30px; overflow-y: auto; background: rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        
+        .page-header h1 { font-size: 1.8rem; margin: 0 0 8px; background: linear-gradient(135deg, #fff, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-header p { color: var(--text-secondary); margin: 0 0 30px; font-size: 0.95rem; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+        
+        .btn-analyze {
+            background: #10b981;
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-analyze:hover { background: #059669; }
+
+        .chat-message {
+            margin-bottom: 20px;
+            max-width: 85%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .msg-ai {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+        .msg-ai h3 { color: #10b981; margin: 0 0 10px 0; font-size: 1.1rem; }
+        .msg-ai ul { padding-left: 20px; margin-top: 10px; }
+        .msg-ai li { margin-bottom: 5px; color: var(--text-secondary); }
+        .msg-ai strong { color: #fff; }
+        
+        .loading-dots {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            padding: 15px 20px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .dot { width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="logo.svg" alt="NeuroCLI AI" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'white\'><path d=\'M12 2L2 22h20L12 2z\'/></svg>'">
+            <span>NeuroCLI AI</span>
+        </div>
+        <a href="chat.html" class="nav-item"><i class="ph ph-chat-circle-dots"></i> AI Chat</a>
+        <a href="split-chat.html" class="nav-item"><i class="ph ph-columns"></i> Split Co-Pilot</a>
+        <a href="mindmap.html" class="nav-item"><i class="ph ph-graph"></i> Infinite Canvas</a>
+        <a href="scratchpad.html" class="nav-item"><i class="ph ph-pencil-line"></i> AI Scratchpad</a>
+        <a href="voice-studio.html" class="nav-item"><i class="ph ph-phone-call"></i> Voice Studio</a>
+        
+        <div class="nav-divider">Medical & Pro Tools</div>
+        <a href="surgical-analyzer.html" class="nav-item"><i class="ph ph-video-camera"></i> Surgical Analyzer</a>
+        <a href="medical-imaging.html" class="nav-item"><i class="ph ph-scan"></i> Medical Imaging</a>
+        <a href="symptom-checker.html" class="nav-item active"><i class="ph ph-stethoscope"></i> Symptom Checker</a>
+        <a href="drug-scanner.html" class="nav-item"><i class="ph ph-pill"></i> Drug Scanner</a>
+        <a href="code-analyzer.html" class="nav-item"><i class="ph ph-code-block"></i> Code Analyzer</a>
+        <a href="legal-analyzer.html" class="nav-item"><i class="ph ph-scales"></i> Legal Analyzer</a>
+        <a href="meeting-transcriber.html" class="nav-item"><i class="ph ph-microphone"></i> Meeting Transcriber</a>
+        <a href="compliance-checker.html" class="nav-item"><i class="ph ph-shield-check"></i> Compliance Checker</a>
+    </div>
+
+    <div class="main">
+        <div class="intake-panel">
+            <div class="page-header">
+                <h1><i class="ph ph-stethoscope"></i> Patient Symptom Engine</h1>
+                <p>Enter patient vitals and chief complaint for a differential diagnosis breakdown generated by NeuroCLI AI text models.</p>
+            </div>
+
+            <div class="form-group">
+                <label>Patient Age</label>
+                <input type="number" id="age" placeholder="e.g. 45">
+            </div>
+            <div class="form-group">
+                <label>Biological Sex</label>
+                <select id="sex">
+                    <option value="">Select...</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Chief Complaint / Symptoms</label>
+                <textarea id="symptoms" rows="4" placeholder="Describe the symptoms in detail..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Duration of Symptoms</label>
+                <input type="text" id="duration" placeholder="e.g. 3 days, 2 weeks">
+            </div>
+
+            <button class="btn-analyze" onclick="analyzeSymptoms()">
+                <i class="ph ph-brain"></i> Generate Differential Diagnosis
+            </button>
+        </div>
+
+        <div class="chat-panel" id="chat-container">
+            <div class="chat-message msg-ai">
+                <strong>NeuroCLI Diagnostician</strong>
+                <p style="margin-top: 5px; color: var(--text-secondary);">Waiting for patient data. Fill out the intake form to begin differential analysis.</p>
+            </div>
+            <!-- Dynamic content will be appended here -->
+            <div class="loading-dots" id="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function analyzeSymptoms() {
+            const age = document.getElementById('age').value;
+            const sex = document.getElementById('sex').value;
+            const symptoms = document.getElementById('symptoms').value;
+            const duration = document.getElementById('duration').value;
+            
+            if (!symptoms) {
+                alert("Please describe the symptoms.");
+                return;
+            }
+
+            const chatContainer = document.getElementById('chat-container');
+            const loadingDots = document.getElementById('loading-dots');
+            
+            // Remove previous results if any
+            const existingResults = document.querySelectorAll('.result-msg');
+            existingResults.forEach(el => el.remove());
+
+            // Show loading
+            loadingDots.style.display = 'flex';
+            
+            try {
+                const prompt = `Act as a medical diagnostic AI. Patient: ${age} year old ${sex}. Symptoms: ${symptoms}. Duration: ${duration || 'Not specified'}.
+Please provide a differential diagnosis, cause of symptoms, suggested remedies, and some general over-the-counter medication options (with a disclaimer).
+Format your response ENTIRELY in HTML using this exact structure (do NOT use markdown):
+<div class="chat-message msg-ai result-msg">
+    <h3>Differential Diagnosis</h3>
+    <p>Based on the symptoms, here is the clinical evaluation:</p>
+    <ul>
+        <li><strong>Primary:</strong> [Cause]</li>
+        <li><strong>Secondary:</strong> [Cause]</li>
+    </ul>
+    
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+        <strong>Suggested Remedies:</strong>
+        <p>[List home remedies or immediate care]</p>
+    </div>
+    
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border-color);">
+        <strong>General Medication Options:</strong>
+        <p>[Over-the-counter suggestions]</p>
+        <p style="color: #f59e0b; font-size: 0.85rem; margin-top: 5px;"><em>Disclaimer: Please consult a doctor before taking any medication.</em></p>
+    </div>
+</div>`;
+
+                const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+                let htmlContent = await response.text();
+                
+                // Fallback cleanup if the AI includes markdown backticks
+                htmlContent = htmlContent.replace(/```html/g, '').replace(/```/g, '');
+                
+                loadingDots.style.display = 'none';
+                loadingDots.insertAdjacentHTML('beforebegin', htmlContent);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+            } catch (err) {
+                console.error("AI Analysis Error:", err);
+                loadingDots.style.display = 'none';
+                loadingDots.insertAdjacentHTML('beforebegin', `<div class="chat-message msg-ai result-msg"><p style="color: #ef4444;">Failed to connect to NeuroCLI AI. Please try again.</p></div>`);
+            }
+        }
+    </script>
+</body>
+</html>

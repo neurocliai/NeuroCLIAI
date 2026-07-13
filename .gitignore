@@ -1,0 +1,66 @@
+# ─── Environment & Secrets ───────────────────────────────────────────────────
+.env
+*.env
+.env.*
+!.env.example
+
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+*.whl
+venv/
+env/
+.venv/
+.env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ─── Flask / Backend ─────────────────────────────────────────────────────────
+instance/
+*.db
+*.sqlite3
+flask_session/
+
+# ─── Node / JS ────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+.yarn/
+
+# ─── Build Outputs ────────────────────────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# ─── Editor & OS ─────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.user
+*.swp
+*~
+*.bak
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Uploads / Generated Files ───────────────────────────────────────────────
+uploads/
+generated/
+*.mp3
+*.wav

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Canvas | NeuroCLI AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #0a0a0a; color: white; font-family: 'Inter', sans-serif; }
+        
+        #app-layout { display: flex; height: 100vh; }
+        
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            cursor: grab;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        
+        #canvas-container:active { cursor: grabbing; }
+
+        #canvas-layer {
+            position: absolute;
+            transform-origin: 0 0;
+            width: 10000px;
+            height: 10000px;
+            /* start somewhat centered */
+            left: -4000px;
+            top: -4000px;
+        }
+
+        .mindmap-node {
+            position: absolute;
+            width: 300px;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 15px;
+            cursor: default;
+        }
+
+        .mindmap-node.user {
+            border-color: #3b82f6;
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .node-content {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .node-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .node-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        .node-content::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+        }
+        
+        .node-content pre { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; }
+
+        .node-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 10px;
+        }
+
+        .node-input {
+            width: 100%;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px;
+            border-radius: 6px;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .btn-spawn {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        svg.connections {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-layout">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <img src="logo.svg" alt="Logo" class="sidebar-logo">
+                    <h2>NeuroCLI AI</h2>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="chat.html" class="nav-item"><i class="ph ph-chat-circle-dots"></i> AI Chat</a>
+                <a href="split-chat.html" class="nav-item"><i class="ph ph-columns"></i> Split Co-Pilot</a>
+                <a href="mindmap.html" class="nav-item active"><i class="ph ph-graph"></i> Infinite Canvas</a>
+            </nav>
+        </div>
+
+        <div id="canvas-container">
+            <div id="canvas-layer">
+                <svg class="connections" id="svg-layer"></svg>
+                <!-- Initial Node -->
+                <div class="mindmap-node user" id="root-node" style="left: 4500px; top: 4500px;">
+                    <div style="font-weight: bold; margin-bottom: 10px; color: #3b82f6;"><i class="ph ph-user"></i> Start Here</div>
+                    <textarea class="node-input" rows="2" placeholder="Ask a question to spawn a branch..."></textarea>
+                    <div class="node-actions">
+                        <button class="btn-spawn" onclick="spawnBranch('root-node')">Generate Branch <i class="ph ph-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pan and Zoom Logic
+        const container = document.getElementById('canvas-container');
+        const layer = document.getElementById('canvas-layer');
+        let scale = 1;
+        let isDragging = false;
+        let startX, startY;
+        let tx = 0, ty = 0;
+
+        let draggedNode = null;
+        let nodeStartX, nodeStartY;
+        let initialMouseX, initialMouseY;
+        let connections = []; // Track connections for redrawing { id1, id2, path }
+
+        container.addEventListener('mousedown', (e) => {
+            const node = e.target.closest('.mindmap-node');
+            // If we clicked a node (but not its input or button), drag the node
+            if (node && !e.target.closest('.node-input') && !e.target.closest('.btn-spawn')) {
+                draggedNode = node;
+                initialMouseX = e.clientX;
+                initialMouseY = e.clientY;
+                nodeStartX = parseInt(node.style.left) || 0;
+                nodeStartY = parseInt(node.style.top) || 0;
+                return;
+            }
+
+            // Otherwise drag the canvas
+            isDragging = true;
+            startX = e.clientX - tx;
+            startY = e.clientY - ty;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (draggedNode) {
+                const dx = (e.clientX - initialMouseX) / scale;
+                const dy = (e.clientY - initialMouseY) / scale;
+                draggedNode.style.left = (nodeStartX + dx) + 'px';
+                draggedNode.style.top = (nodeStartY + dy) + 'px';
+                updateLines();
+                return;
+            }
+
+            if (!isDragging) return;
+            tx = e.clientX - startX;
+            ty = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            draggedNode = null;
+        });
+
+        container.addEventListener('wheel', (e) => {
+            // Allow native scrolling inside the AI response boxes
+            if (e.target.closest('.node-content')) return;
+
+            e.preventDefault();
+            const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
+            scale *= zoomAmount;
+            scale = Math.min(Math.max(0.2, scale), 3);
+            updateTransform();
+        }, { passive: false });
+
+        function updateTransform() {
+            layer.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+        }
+
+        // Branch Generation Logic
+        async function spawnBranch(parentId) {
+            const parentNode = document.getElementById(parentId);
+            const input = parentNode.querySelector('.node-input');
+            const prompt = input ? input.value : '';
+            if (!prompt) return;
+
+            const btn = parentNode.querySelector('.btn-spawn');
+            if (btn) btn.disabled = true;
+
+            const px = parseInt(parentNode.style.left);
+            const py = parseInt(parentNode.style.top);
+
+            const newNodeId = 'node-' + Date.now();
+            const newNode = document.createElement('div');
+            newNode.className = 'mindmap-node';
+            newNode.id = newNodeId;
+            
+            // Offset to the right
+            newNode.style.left = (px + 400) + 'px';
+            newNode.style.top = (py + (Math.random() * 200 - 100)) + 'px';
+
+            newNode.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px; color: #8b5cf6;"><i class="ph ph-robot"></i> AI Response</div>
+                <div class="node-content" id="content-${newNodeId}">Generating...</div>
+                <div class="node-actions" style="flex-direction: column;">
+                    <textarea class="node-input" rows="1" placeholder="Follow up..."></textarea>
+                    <button class="btn-spawn" onclick="spawnBranch('${newNodeId}')" style="align-self: flex-start;">Branch <i class="ph ph-arrow-right"></i></button>
+                </div>
+            `;
+
+            layer.appendChild(newNode);
+            drawLine(parentId, newNodeId);
+
+            // Fetch AI
+            try {
+                const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+                const text = await res.text();
+                document.getElementById(`content-${newNodeId}`).innerHTML = marked.parse(text);
+            } catch (e) {
+                document.getElementById(`content-${newNodeId}`).innerHTML = "Error generating branch.";
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function drawLine(id1, id2) {
+            const svg = document.getElementById('svg-layer');
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            line.setAttribute('stroke', 'rgba(139, 92, 246, 0.5)');
+            line.setAttribute('stroke-width', '3');
+            line.setAttribute('fill', 'none');
+            svg.appendChild(line);
+            
+            connections.push({ id1, id2, path: line });
+            updateLines();
+        }
+
+        function updateLines() {
+            connections.forEach(conn => {
+                const el1 = document.getElementById(conn.id1);
+                const el2 = document.getElementById(conn.id2);
+                if (!el1 || !el2) return;
+
+                const x1 = parseInt(el1.style.left) + 300; // right edge of node 1
+                const y1 = parseInt(el1.style.top) + (el1.offsetHeight / 2 || 100);
+                const x2 = parseInt(el2.style.left); // left edge of node 2
+                const y2 = parseInt(el2.style.top) + (el2.offsetHeight / 2 || 100);
+
+                const d = `M ${x1} ${y1} C ${x1 + 150} ${y1}, ${x2 - 150} ${y2}, ${x2} ${y2}`;
+                conn.path.setAttribute('d', d);
+            });
+        }
+    </script>
+</body>
+</html>
+
+

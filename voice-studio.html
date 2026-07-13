@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Studio - NeuroCLI</title>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="voice-studio.css">
+</head>
+<body class="dark-theme">
+    
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar expanded" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <img src="logo.svg" alt="Logo" class="sidebar-logo">
+                    <h2>NeuroCLI AI</h2>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="chat.html" class="nav-item"><i class="ph ph-chat-circle-dots"></i> AI Chat</a>
+                <a href="split-chat.html" class="nav-item"><i class="ph ph-columns"></i> Split Co-Pilot</a>
+                    <a href="mindmap.html" class="nav-item"><i class="ph ph-graph"></i> Infinite Canvas</a>
+                    <a href="scratchpad.html" class="nav-item"><i class="ph ph-pencil-line"></i> AI Scratchpad</a>
+                <a href="voice-studio.html" class="nav-item active"><i class="ph ph-phone-call"></i> Voice Studio</a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="voice-main">
+            <header class="chat-header">
+                <button id="sidebar-toggle-btn" class="icon-btn"><i class="ph ph-list"></i></button>
+                <h2>Voice Telephony Simulator</h2>
+                <div class="header-actions">
+                    <button class="icon-btn" title="Twilio Settings"><i class="ph ph-gear"></i></button>
+                </div>
+            </header>
+
+            <div class="voice-content">
+                <div class="dashboard-header">
+                    <h1><i class="ph ph-microphone-stage"></i> Select AI Persona</h1>
+                    <p>Configure industry-specific AI voice agents capable of answering live phone calls.</p>
+                </div>
+
+                <!-- Personas Grid -->
+                <div class="personas-grid" id="personas-grid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Call Simulator Bottom Panel -->
+            <div class="simulator-panel" id="simulator-panel">
+                <div class="simulator-header">
+                    <h3><i class="ph ph-phone-call"></i> Live Call: <span id="active-persona-name">None</span></h3>
+                    <div class="sim-lang-controls">
+                        <span class="live-dot" id="live-dot" style="display:none"></span>
+                        <select id="voice-select" class="voice-select" title="Select Language"></select>
+                        <button id="close-simulator" class="icon-btn"><i class="ph ph-x"></i></button>
+                    </div>
+                </div>
+
+                <!-- Conversation History -->
+                <div class="conversation-log" id="conversation-log">
+                    <p class="conv-hint">🎙️ Press the mic button and speak. The AI will reply in your chosen language.</p>
+                </div>
+
+                <!-- Mic Control Area -->
+                <div class="voice-control-area">
+                    <div class="ai-status-bar" id="ai-status"><i class="ph ph-microphone"></i> Tap mic to speak</div>
+                    <button class="mic-btn" id="mic-btn">
+                        <i class="ph-fill ph-microphone" id="mic-icon"></i>
+                        <span class="mic-pulse" id="mic-pulse"></span>
+                    </button>
+                    <span class="mic-hint" id="mic-hint">tap to speak</span>
+                    <audio id="tts-audio" style="display:none;"></audio>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toggle sidebar logic -->
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
+        sidebarToggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+    </script>
+    <!-- Firebase Auth Check -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            projectId: "neurocliai-11b75",
+            appId: "1:178874986630:web:b669a43f063edc77826107",
+            storageBucket: "neurocliai-11b75.firebasestorage.app",
+            apiKey: "AIzaSyCZZwGyIFmAHZc0sg3hUXjGNURKDFBF_jA",
+            authDomain: "neurocliai-11b75.firebaseapp.com",
+            messagingSenderId: "178874986630",
+            measurementId: "G-KGK91GBR6S"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+
+            // Redirect to auth page if not logged in
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    window.location.href = 'auth.html';
+                } else {
+                    window.currentUserUid = user.uid;
+                    window.currentUserEmail = user.email;
+                    window.currentUserName = user.displayName || 'NeuroCLI User';
+                }
+            });
+
+            window.handleSignOut = () => {
+                signOut(auth).then(() => {
+                    window.location.href = 'auth.html';
+                });
+            };
+        } catch (e) {
+            console.error("Firebase init error", e);
+        }
+    </script>
+    <script src="voice-studio.js"></script>
+</body>
+</html>
+
+
+
+

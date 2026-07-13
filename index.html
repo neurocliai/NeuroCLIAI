@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroCLI AI </title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <section id="landing-page" class="view active" style="position: relative; opacity: 1; pointer-events: all;">
+            <!-- Header -->
+            <header class="landing-header">
+                <div class="landing-brand">
+                    <img src="logo.svg" alt="NeuroCLI AI" class="header-logo">
+                    <span>NeuroCLI AI</span>
+                </div>
+                <nav class="landing-nav">
+                    <a href="#features-section">Features</a>
+                    <a href="#target-section">Audience</a>
+                    <a href="#comparison-section">Comparison</a>
+                    <a href="#about-section">About</a>
+                    <a href="mailto:info@neurocli.in">Contact</a>
+                    <a href="auth.html" id="nav-start-btn" class="primary-btn small-btn"
+                        style="text-decoration: none;">Launch App</a>
+                </nav>
+            </header>
+
+            <div class="landing-hero">
+                <!-- 3D Canvas Background -->
+                <canvas id="webgl-canvas" class="webgl-canvas"></canvas>
+
+                <div class="hero-content">
+                    <h1 class="gradient-text">Next-Generation AI Interface</h1>
+                    <p class="subtitle">Experience lightning-fast text generation powered by NeuroCLI AI. Fully customizable and endlessly versatile for coding, creative writing, and chat.</p>
+                        client-side, zero limits.</p>
+                    <a href="auth.html" id="start-chat-btn" class="primary-btn glow-effect hero-btn"
+                        style="text-decoration: none; display: inline-flex;">
+                        Start Chatting <i class="ph ph-arrow-right"></i>
+                    </a>
+                </div>
+
+                <!-- Animated Chat Feature -->
+                <div class="hero-chat-animation">
+                    <div class="animated-chat-box">
+                        <div class="chat-header-fake">
+                            <div class="dots"><span></span><span></span><span></span></div>
+                        </div>
+                        <div class="chat-body-fake" id="animated-chat-body">
+                            <!-- Messages will be injected by JS -->
+                        </div>
+                        <div class="chat-input-fake">
+                            <div class="fake-input" id="animated-chat-input"></div>
+                            <div class="fake-send"><i class="ph ph-paper-plane-right"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div id="features-section" class="features-section">
+                <div class="features-header">
+                    <h2>Unrivaled <span class="gradient-text">Features</span></h2>
+                    <p>Experience tools that go beyond ordinary chat interfaces.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="ph ph-columns feature-icon"></i>
+                        <h3>Split Co-Pilot</h3>
+                        <p>Ask one question and watch two distinct AI personas debate and answer simultaneously in split-screen.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph ph-graph feature-icon"></i>
+                        <h3>Infinite Canvas</h3>
+                        <p>A drag-and-drop 2D spatial mindmap with dynamic SVG neural connections connecting your thoughts.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph ph-terminal-window feature-icon"></i>
+                        <h3>Glass Box HUD</h3>
+                        <p>A transparent developer terminal overlaid on your chat tracking real-time API telemetry and latency.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph ph-magic-wand feature-icon"></i>
+                        <h3>Live DOM Morphing</h3>
+                        <p>The entire application's theme and CSS morphs dynamically based on context clues inside AI responses.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph ph-download-simple feature-icon"></i>
+                        <h3>Hologram Editor</h3>
+                        <p>Directly save AI-generated code blocks straight to your local PC file system with a single click securely.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph ph-phone-call feature-icon"></i>
+                        <h3>Decentralized Voice</h3>
+                        <p>Native, client-side speech synthesis and email integrations requiring absolutely zero external APIs.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph ph-pencil-line feature-icon"></i>
+                        <h3>AI Scratchpad</h3>
+                        <p>A dedicated, distraction-free environment to collaborate on long-form code and essays alongside your AI.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="ph ph-chalkboard feature-icon"></i>
+                        <h3>Spatial Memory Canvas</h3>
+                        <p>A virtual whiteboard that automatically extracts and pins keywords, code, and images from your chat for visual organization.</p>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(239,68,68,0.2);">
+                        <i class="ph ph-video-camera feature-icon" style="color:#f87171;"></i>
+                        <h3>Surgical Video Analyzer</h3>
+                        <p>Upload any surgical .mp4. AI identifies the procedure, surgical tools, operative phases and generates a full clinical report.</p>
+                        <a href="surgical-analyzer.html" style="color:#f87171;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(96,165,250,0.2);">
+                        <i class="ph ph-scan feature-icon" style="color:#60a5fa;"></i>
+                        <h3>Medical Image Diagnostic</h3>
+                        <p>Upload X-Ray, MRI, CT scan images. AI returns anomaly findings and generates a radiologist-style structured diagnostic report.</p>
+                        <a href="medical-imaging.html" style="color:#60a5fa;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(52,211,153,0.2);">
+                        <i class="ph ph-stethoscope feature-icon" style="color:#34d399;"></i>
+                        <h3>AI Symptom Checker</h3>
+                        <p>Structured patient intake with dynamic follow-up questions. Returns differential diagnoses, specialist recommendations and pre-consultation briefs.</p>
+                        <a href="symptom-checker.html" style="color:#34d399;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(248,113,113,0.2);">
+                        <i class="ph ph-pill feature-icon" style="color:#f87171;"></i>
+                        <h3>Drug Interaction Scanner</h3>
+                        <p>Upload a prescription image or enter meds manually. AI flags critical drug-drug interactions and dosage anomalies with risk scoring.</p>
+                        <a href="drug-scanner.html" style="color:#f87171;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(251,191,36,0.2);">
+                        <i class="ph ph-code-block feature-icon" style="color:#fbbf24;"></i>
+                        <h3>Code Debt Analyzer</h3>
+                        <p>Upload a .zip codebase. AI scans every file for dead code, security vulnerabilities, and outputs a prioritized refactoring roadmap.</p>
+                        <a href="code-analyzer.html" style="color:#fbbf24;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(129,140,248,0.2);">
+                        <i class="ph ph-scales feature-icon" style="color:#818cf8;"></i>
+                        <h3>Legal Contract Analyzer</h3>
+                        <p>Upload any PDF contract in any language. AI identifies risky clauses, missing protections, and hidden liabilities with clause-level risk scoring.</p>
+                        <a href="legal-analyzer.html" style="color:#818cf8;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(192,132,252,0.2);">
+                        <i class="ph ph-microphone feature-icon" style="color:#c084fc;"></i>
+                        <h3>Meeting Transcriber</h3>
+                        <p>Live real-time speech-to-text. AI generates structured Minutes of Meeting with action items, owners, and deadlines automatically.</p>
+                        <a href="meeting-transcriber.html" style="color:#c084fc;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                    <div class="feature-card" style="border-color: rgba(45,212,191,0.2);">
+                        <i class="ph ph-shield-check feature-icon" style="color:#2dd4bf;"></i>
+                        <h3>Compliance Checker</h3>
+                        <p>Check documents against GDPR, HIPAA, FDA, ISO standards. AI flags exact paragraph-level violations and generates gap analysis reports.</p>
+                        <a href="compliance-checker.html" style="color:#2dd4bf;font-size:0.8rem;text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">Try it <i class="ph ph-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Audience Section -->
+            <div id="target-section" class="target-section">
+                <div class="features-header">
+                    <h2>Who is this for?</h2>
+                    <p>Designed for power users who find standard AI interfaces too restrictive.</p>
+                </div>
+                <div class="target-grid">
+                    <div class="target-card">
+                        <i class="ph ph-code"></i>
+                        <h4>Developers & Engineers</h4>
+                        <p>Telemetry HUD, Save-to-Disk code blocks, Code Debt Analyzer, and a hacker terminal interface built for technical power users.</p>
+                    </div>
+                    <div class="target-card">
+                        <i class="ph ph-projector-screen-chart"></i>
+                        <h4>Researchers & Strategists</h4>
+                        <p>Dual-persona debate mode, AI Scratchpad for long-form research, and Meeting Transcription with auto-generated action items.</p>
+                    </div>
+                    <div class="target-card">
+                        <i class="ph ph-tree-structure"></i>
+                        <h4>Visual Thinkers & PMs</h4>
+                        <p>Infinite 2D Canvas with drag-and-drop node branching for mapping product architectures, storyboards, and decision trees.</p>
+                    </div>
+                    <div class="target-card" style="border-color:rgba(239,68,68,0.2);">
+                        <i class="ph ph-heart-straight" style="color:#f87171;"></i>
+                        <h4>Medical Professionals</h4>
+                        <p>Surgical video AI, medical image diagnostics, symptom-to-diagnosis triage, and drug interaction scanning — all without any external API costs.</p>
+                    </div>
+                    <div class="target-card" style="border-color:rgba(129,140,248,0.2);">
+                        <i class="ph ph-scales" style="color:#818cf8;"></i>
+                        <h4>Legal & Compliance Teams</h4>
+                        <p>Upload any PDF contract for risky clause detection, and check privacy policies or SOPs against GDPR, HIPAA, FDA, ISO standards instantly.</p>
+                    </div>
+                    <div class="target-card" style="border-color:rgba(45,212,191,0.2);">
+                        <i class="ph ph-lock-open" style="color:#2dd4bf;"></i>
+                        <h4>Privacy-Conscious Users</h4>
+                        <p>Fully decentralized — no subscriptions, no data harvesting, no API keys. Works 100% in-browser with zero cloud dependencies.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Table Section -->
+            <div id="comparison-section" class="comparison-section">
+                <div class="features-header">
+                    <h2>Why NeuroCLI AI is <span class="gradient-text">Different</span></h2>
+                </div>
+                <div class="table-container">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Feature</th>
+                                <th class="highlight-col">NeuroCLI AI</th>
+                                <th>ChatGPT</th>
+                                <th>Gemini</th>
+                                <th>Claude</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="background:rgba(255,255,255,0.01);"><td colspan="5" style="color:var(--text-muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;padding:12px 20px;">Core Chat Features</td></tr>
+                            <tr>
+                                <td>Dual-Persona Concurrent Chat</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Infinite 2D Spatial Canvas</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Hacker Telemetry HUD</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Direct Save-to-Disk Code</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Decentralized Voice Studio</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-check-circle" style="color: #10b981;"></i> (Cloud)</td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Live DOM Context Morphing</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr style="background:rgba(255,255,255,0.01);"><td colspan="5" style="color:var(--text-muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:1px;padding:12px 20px;">Medical & Professional Tools</td></tr>
+                            <tr>
+                                <td>Surgical Video Analyzer (MP4 → Report)</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Medical Image Diagnostic (X-Ray/MRI/CT)</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-minus" style="color: #f59e0b;"></i> (Limited)</td>
+                                <td><i class="ph ph-minus" style="color: #f59e0b;"></i> (Limited)</td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>AI Symptom Checker + Differential Diagnosis</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-minus" style="color: #f59e0b;"></i> (General chat)</td>
+                                <td><i class="ph ph-minus" style="color: #f59e0b;"></i> (General chat)</td>
+                                <td><i class="ph ph-minus" style="color: #f59e0b;"></i> (General chat)</td>
+                            </tr>
+                            <tr>
+                                <td>Drug Interaction Scanner (Prescription Upload)</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Code Debt Analyzer (.zip Codebase Scan)</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Legal Contract Analyzer (PDF Upload)</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Real-Time Meeting Transcriber + MOM</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr>
+                                <td>Compliance Checker (GDPR/HIPAA/FDA/ISO)</td>
+                                <td class="highlight-col"><i class="ph ph-check-circle" style="color: #10b981;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                                <td><i class="ph ph-x-circle" style="color: #ef4444;"></i></td>
+                            </tr>
+                            <tr style="background:rgba(139,92,246,0.05);"><td colspan="5" style="text-align:center;padding:14px;font-size:0.85rem;color:var(--text-secondary);">NeuroCLI AI scores <strong style="color:#a78bfa;">14/14</strong> features &nbsp;|&nbsp; ChatGPT: 2/14 &nbsp;|&nbsp; Gemini: 1/14 &nbsp;|&nbsp; Claude: 1/14</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- About Section -->
+            <div id="about-section" class="about-section">
+                <div class="about-container">
+                    <div class="about-text">
+                        <h2>About <span class="gradient-text">NeuroCLI AI</span></h2>
+                        <p>NeuroCLI AI is a cutting-edge interface designed to interact seamlessly with AI models. Built
+                            on a fully client-side architecture, it connects directly to text.pollinations.ai, ensuring
+                            maximum scalability and zero IP blocking even with millions of concurrent users.</p>
+                        <p>Our mission is to democratize access to advanced AI generation through a beautiful,
+                            intuitive, and highly responsive user experience.</p>
+                    </div>
+                    <div class="about-image">
+                        <img src="neurocli_logo.png" alt="NeuroCLI AI Logo Large" class="floating">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="landing-footer">
+                <div class="footer-content">
+                    <div class="footer-brand">
+                        <img src="logo.svg" alt="NeuroCLI AI">
+                        <span>NeuroCLI AI</span>
+                    </div>
+                    <div class="footer-links">
+                        <a href="mailto:info@neurocli.in"><i class="ph ph-envelope-simple"></i> info@neurocli.in</a>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2026 NeuroCLI AI. All rights reserved.</p>
+                </div>
+            </footer>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initThreeJS();
+            initLandingAnimation();
+        });
+
+        // 3D Background Animation using Three.js
+        function initThreeJS() {
+            const canvas = document.getElementById('webgl-canvas');
+            if (!canvas) return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Particles Geometry
+            const particlesGeometry = new THREE.BufferGeometry();
+            const particlesCount = 700;
+            const posArray = new Float32Array(particlesCount * 3);
+
+            for (let i = 0; i < particlesCount * 3; i++) {
+                posArray[i] = (Math.random() - 0.5) * 10;
+            }
+
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+            // Materials
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.02,
+                color: 0x8b5cf6, // Accent Primary
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending
+            });
+
+            // Mesh
+            const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particlesMesh);
+
+            // Add a subtle wireframe sphere for structure
+            const sphereGeometry = new THREE.SphereGeometry(2.5, 32, 32);
+            const sphereMaterial = new THREE.MeshBasicMaterial({
+                color: 0x3b82f6, // Accent Secondary
+                wireframe: true,
+                transparent: true,
+                opacity: 0.05
+            });
+            const wireframe = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            scene.add(wireframe);
+
+            camera.position.z = 4;
+
+            // Mouse interaction
+            let mouseX = 0;
+            let mouseY = 0;
+            let targetX = 0;
+            let targetY = 0;
+
+            const windowHalfX = window.innerWidth / 2;
+            const windowHalfY = window.innerHeight / 2;
+
+            document.addEventListener('mousemove', (event) => {
+                mouseX = (event.clientX - windowHalfX);
+                mouseY = (event.clientY - windowHalfY);
+            });
+
+            // Animation Loop
+            const clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                const elapsedTime = clock.getElapsedTime();
+
+                targetX = mouseX * 0.001;
+                targetY = mouseY * 0.001;
+
+                particlesMesh.rotation.y += 0.002;
+                particlesMesh.rotation.x += 0.001;
+
+                wireframe.rotation.y -= 0.001;
+                wireframe.rotation.x += 0.002;
+
+                particlesMesh.rotation.y += 0.05 * (targetX - particlesMesh.rotation.y);
+                particlesMesh.rotation.x += 0.05 * (targetY - particlesMesh.rotation.x);
+
+                // Add a floating bobbing effect
+                particlesMesh.position.y = Math.sin(elapsedTime * 0.5) * 1.5;
+                wireframe.position.y = Math.sin(elapsedTime * 0.5) * 1.5;
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+
+        // Landing Page Fake Chat Animation
+        function initLandingAnimation() {
+            const fakeInput = document.getElementById('animated-chat-input');
+            const fakeBody = document.getElementById('animated-chat-body');
+            if (!fakeInput || !fakeBody) return;
+
+            const script = [
+                { type: 'type', text: "Explain quantum computing in simple terms." },
+                { type: 'send' },
+                { type: 'receive', text: "Quantum computing uses the principles of quantum mechanics to process information. While classic computers use bits (0 or 1), quantum computers use 'qubits' which can be both 0 and 1 at the same time, allowing them to solve complex problems much faster!" },
+                { type: 'type', text: "That's amazing! How fast is it?" },
+                { type: 'send' },
+                { type: 'receive', text: "It depends on the problem! For tasks like cryptography or simulating molecules, a quantum computer could take seconds to solve what would take a supercomputer millions of years." }
+            ];
+
+            let step = 0;
+            let charIndex = 0;
+
+            async function runScript() {
+                if (step >= script.length) {
+                    // reset after a delay
+                    await new Promise(r => setTimeout(r, 5000));
+                    fakeBody.innerHTML = '';
+                    step = 0;
+                }
+
+                const current = script[step];
+
+                if (current.type === 'type') {
+                    if (charIndex === 0) fakeInput.textContent = '';
+
+                    if (charIndex < current.text.length) {
+                        fakeInput.textContent += current.text.charAt(charIndex);
+                        charIndex++;
+                        setTimeout(runScript, Math.random() * 50 + 50); // Typing speed
+                    } else {
+                        step++;
+                        charIndex = 0;
+                        setTimeout(runScript, 500); // Pause before send
+                    }
+                } else if (current.type === 'send') {
+                    const text = fakeInput.textContent;
+                    fakeInput.textContent = '';
+                    addFakeMsg('user', text);
+                    step++;
+                    setTimeout(runScript, 1000); // Pause before reply
+                } else if (current.type === 'receive') {
+                    addFakeMsg('ai', current.text);
+                    step++;
+                    setTimeout(runScript, 2000); // Pause before next input
+                }
+            }
+
+            function addFakeMsg(role, text) {
+                const div = document.createElement('div');
+                div.className = `fake-msg fake-${role}`;
+                div.textContent = text;
+                fakeBody.appendChild(div);
+                fakeBody.scrollTop = fakeBody.scrollHeight;
+            }
+
+            // Start loop
+            setTimeout(runScript, 1000);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Co-Pilot Split | NeuroCLI AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .split-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 140px);
+            overflow: hidden;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .split-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .split-panel:first-child {
+            border-right: 1px solid var(--border-color);
+        }
+        .split-header {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .split-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--accent-primary);
+        }
+        .split-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .split-input-area {
+            height: 80px;
+            padding: 15px 30px;
+            background: var(--bg-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <section class="view active" style="display: flex;">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="brand">
+                        <img src="logo.svg" alt="Logo" class="sidebar-logo">
+                        <h2>NeuroCLI AI</h2>
+                    </div>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="chat.html" class="nav-item"><i class="ph ph-chat-circle-dots"></i> AI Chat</a>
+                    <a href="split-chat.html" class="nav-item active"><i class="ph ph-columns"></i> Split Co-Pilot</a>
+                    <a href="scratchpad.html" class="nav-item"><i class="ph ph-pencil-line"></i> AI Scratchpad</a>
+                    <a href="voice-studio.html" class="nav-item"><i class="ph ph-phone-call"></i> Voice Studio</a>
+    <div class="nav-divider">Medical &amp; Pro Tools</div>
+    <a href="surgical-analyzer.html" class="nav-item"><i class="ph ph-video-camera"></i> Surgical Analyzer</a>
+    <a href="medical-imaging.html" class="nav-item"><i class="ph ph-scan"></i> Medical Imaging</a>
+    <a href="symptom-checker.html" class="nav-item"><i class="ph ph-stethoscope"></i> Symptom Checker</a>
+    <a href="drug-scanner.html" class="nav-item"><i class="ph ph-pill"></i> Drug Scanner</a>
+    <a href="code-analyzer.html" class="nav-item"><i class="ph ph-code-block"></i> Code Analyzer</a>
+    <a href="legal-analyzer.html" class="nav-item"><i class="ph ph-scales"></i> Legal Analyzer</a>
+    <a href="meeting-transcriber.html" class="nav-item"><i class="ph ph-microphone"></i> Meeting Transcriber</a>
+    <a href="compliance-checker.html" class="nav-item"><i class="ph ph-shield-check"></i> Compliance Checker</a>
+                </nav>
+            </div>
+
+            <div class="main-chat" style="display: flex; flex-direction: column; height: 100vh;">
+                <header class="chat-header">
+                    <h2><i class="ph ph-columns"></i> Co-Pilot Split Mode</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Send one message. Get two different perspectives simultaneously.</p>
+                </header>
+
+                <div class="split-container">
+                    <!-- Left Panel -->
+                    <div class="split-panel">
+                        <div class="split-header">
+                            <h3><i class="ph ph-paint-brush"></i> Creative Persona</h3>
+                        </div>
+                        <div class="split-messages" id="left-messages">
+                            <!-- Messages -->
+                        </div>
+                    </div>
+                    
+                    <!-- Right Panel -->
+                    <div class="split-panel">
+                        <div class="split-header">
+                            <h3 style="color: #0ea5e9;"><i class="ph ph-code"></i> Logical Persona</h3>
+                        </div>
+                        <div class="split-messages" id="right-messages">
+                            <!-- Messages -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="split-input-area">
+                    <form id="split-form">
+                        <div class="input-wrapper" style="max-width: 1000px; margin: 0 auto;">
+                            <textarea id="split-input" placeholder="Broadcast message to both AIs..." rows="1"></textarea>
+                            <button type="submit" id="split-send" class="icon-btn send-btn"><i class="ph ph-paper-plane-right"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const form = document.getElementById('split-form');
+        const input = document.getElementById('split-input');
+        const leftMessages = document.getElementById('left-messages');
+        const rightMessages = document.getElementById('right-messages');
+        const btn = document.getElementById('split-send');
+
+        const sysPromptLeft = "You are a highly creative, free-thinking, and artistic AI. Answer imaginatively and expressively.";
+        const sysPromptRight = "You are a highly logical, strict, concise, and analytical AI. Answer with facts, code, or structured bullet points.";
+
+        function appendMessage(container, role, content) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            
+            const htmlContent = window.marked ? marked.parse(content) : content;
+            
+            div.innerHTML = `
+                <div class="message-avatar">
+                    <i class="ph ${role === 'user' ? 'ph-user' : 'ph-robot'}"></i>
+                </div>
+                <div class="message-content">
+                    ${htmlContent}
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            return div;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = input.value.trim();
+            if (!text) return;
+
+            // Add user message to both
+            appendMessage(leftMessages, 'user', text);
+            appendMessage(rightMessages, 'user', text);
+            
+            input.value = '';
+            btn.disabled = true;
+
+            const promptLeft = `${sysPromptLeft} User says: ${text}`;
+            const promptRight = `${sysPromptRight} User says: ${text}`;
+
+            // Fetch sequentially to prevent IP queue full (429) error from Pollinations API
+            try {
+                const resLeft = await fetch(`https://text.pollinations.ai/${encodeURIComponent(promptLeft)}`);
+                if (!resLeft.ok) throw new Error(`HTTP ${resLeft.status}`);
+                const textLeft = await resLeft.text();
+                appendMessage(leftMessages, 'ai', textLeft);
+
+                const resRight = await fetch(`https://text.pollinations.ai/${encodeURIComponent(promptRight)}`);
+                if (!resRight.ok) throw new Error(`HTTP ${resRight.status}`);
+                const textRight = await resRight.text();
+                appendMessage(rightMessages, 'ai', textRight);
+            } catch (err) {
+                console.error(err);
+                appendMessage(leftMessages, 'ai', 'Error fetching response.');
+                appendMessage(rightMessages, 'ai', 'Error fetching response.');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+        
+        // Auto resize input
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            if (this.value === '') this.style.height = 'auto';
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
+
+
