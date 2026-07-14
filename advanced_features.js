@@ -16,19 +16,51 @@ function handleLensEvent(e) {
             popover = document.createElement('div');
             popover.id = 'thought-lens-popover';
             popover.style.position = 'absolute';
-            popover.style.background = 'rgba(15, 23, 42, 0.95)';
-            popover.style.border = '1px solid #3b82f6';
-            popover.style.color = '#e2e8f0';
-            popover.style.padding = '12px';
-            popover.style.borderRadius = '8px';
+            popover.style.background = 'rgba(15, 23, 42, 0.65)';
+            popover.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            popover.style.color = '#f8fafc';
+            popover.style.padding = '14px';
+            popover.style.borderRadius = '16px';
             popover.style.zIndex = '99999';
             popover.style.pointerEvents = 'none';
-            popover.style.backdropFilter = 'blur(4px)';
-            popover.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.5)';
-            popover.style.fontSize = '12px';
-            popover.style.fontFamily = 'monospace';
-            popover.style.maxWidth = '250px';
+            popover.style.backdropFilter = 'blur(20px) saturate(180%)';
+            popover.style.WebkitBackdropFilter = 'blur(20px) saturate(180%)';
+            popover.style.boxShadow = '0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)';
+            popover.style.fontFamily = 'Inter, sans-serif';
+            popover.style.width = '240px';
+            popover.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
             document.body.appendChild(popover);
+            
+            // Add global hover styles for the buttons
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .lens-action-btn {
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.05);
+                    color: #e2e8f0;
+                    padding: 8px 12px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.2s;
+                    width: 100%;
+                }
+                .lens-action-btn:hover {
+                    background: rgba(255,255,255,0.12);
+                    transform: translateY(-1px);
+                }
+                .lens-highlight {
+                    position: relative;
+                    background-color: rgba(192, 132, 252, 0.25) !important;
+                    border-radius: 4px;
+                    box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.6) !important;
+                }
+            `;
+            document.head.appendChild(style);
         }
         
         // Extract a word from the text content
@@ -42,24 +74,10 @@ function handleLensEvent(e) {
             const wordMatch = textContent.trim().match(/\b\w+\b/g);
             const word = wordMatch ? wordMatch[0] : 'element';
             
-            const probabilities = [0.98, 0.94, 0.89, 0.99, 0.95, 0.82];
-            const prob = probabilities[Math.floor(Math.random() * probabilities.length)];
-            const reasons = [
-                "Matches semantic intent of user query.",
-                "Highest probability token in this context.",
-                "Aligned with system prompt formatting constraints.",
-                "Optimal choice based on preceding n-gram context.",
-                "Selected via beam search optimization.",
-                "Maintains referential coherence with previous turn."
-            ];
-            const reason = reasons[Math.floor(Math.random() * reasons.length)];
-            
             // Highlight the hovered element temporarily
             const originalBg = targetNode.style.backgroundColor;
             const originalOutline = targetNode.style.outline;
-            targetNode.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
-            targetNode.style.outline = '1px dashed #3b82f6';
-            targetNode.style.borderRadius = '4px';
+            targetNode.classList.add('lens-highlight');
             
             // Save the element so we can reset it on mouseout
             popover.dataset.targetElementId = Math.random().toString(36).substr(2, 9);
@@ -69,23 +87,27 @@ function handleLensEvent(e) {
             
             // Add Google Lens style actions
             popover.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                    <strong style="color: #60a5fa; font-size: 14px;"><i class="ph ph-scan"></i> AI Lens</strong>
-                    <span style="color: #34d399; font-size: 10px; background: rgba(52, 211, 153, 0.1); padding: 2px 6px; border-radius: 4px;">Confidence: ${(prob * 100).toFixed(1)}%</span>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #c084fc, #818cf8); border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                            <i class="ph ph-scan" style="color: white; font-size: 14px;"></i>
+                        </div>
+                        <strong style="color: #f8fafc; font-size: 14px; font-weight: 600;">AI Lens</strong>
+                    </div>
                 </div>
-                <div style="color: #94a3b8; font-size: 11px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    Target: "<span style="color: #e2e8f0;">${word.substring(0, 30)}</span>"
+                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); line-height: 1.4;">
+                    Scanned: <span style="color: #e2e8f0; font-weight: 500;">"${word.substring(0, 30)}"</span>
                 </div>
                 
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <button onclick="document.getElementById('prompt-input').value = 'Explain this in more detail: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                        <i class="ph ph-magnifying-glass" style="color: #60a5fa;"></i> Deep Dive / Explain
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Explain this in more detail: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));">
+                        <i class="ph ph-magnifying-glass" style="color: #60a5fa; font-size: 14px;"></i> Deep Dive
                     </button>
-                    <button onclick="document.getElementById('prompt-input').value = 'Rewrite this phrase to be more professional: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                        <i class="ph ph-arrows-clockwise" style="color: #c084fc;"></i> Rewrite / Rephrase
+                    <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Rewrite this phrase to be more professional: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));">
+                        <i class="ph ph-arrows-clockwise" style="color: #c084fc; font-size: 14px;"></i> Rewrite
                     </button>
-                    <button onclick="document.getElementById('prompt-input').value = 'Fix any grammatical or logical errors in this: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
-                        <i class="ph ph-wrench" style="color: #fbbf24;"></i> Scan & Fix Errors
+                    <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Fix any grammatical or logical errors in this: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));">
+                        <i class="ph ph-wrench" style="color: #fbbf24; font-size: 14px;"></i> Scan & Fix
                     </button>
                 </div>
             `;
