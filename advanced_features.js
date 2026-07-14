@@ -65,17 +65,32 @@ function handleLensEvent(e) {
             targetNode.dataset.origBg = originalBg || '';
             targetNode.dataset.origOutline = originalOutline || '';
             
+            // Add Google Lens style actions
             popover.innerHTML = `
-                <strong style="color: #60a5fa; font-size: 14px;">Focus: "${word.substring(0, 20)}"</strong><br/>
-                <span style="color: #34d399;">Probability: ${(prob * 100).toFixed(1)}%</span><br/>
-                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <i class="ph ph-info"></i> ${reason}
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <strong style="color: #60a5fa; font-size: 14px;"><i class="ph ph-scan"></i> AI Lens</strong>
+                    <span style="color: #34d399; font-size: 10px; background: rgba(52, 211, 153, 0.1); padding: 2px 6px; border-radius: 4px;">Confidence: ${(prob * 100).toFixed(1)}%</span>
+                </div>
+                <div style="color: #94a3b8; font-size: 11px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    Target: "<span style="color: #e2e8f0;">${word.substring(0, 30)}</span>"
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <button onclick="document.getElementById('prompt-input').value = 'Explain this in more detail: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        <i class="ph ph-magnifying-glass" style="color: #60a5fa;"></i> Deep Dive / Explain
+                    </button>
+                    <button onclick="document.getElementById('prompt-input').value = 'Rewrite this phrase to be more professional: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        <i class="ph ph-arrows-clockwise" style="color: #c084fc;"></i> Rewrite / Rephrase
+                    </button>
+                    <button onclick="document.getElementById('prompt-input').value = 'Fix any grammatical or logical errors in this: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                        <i class="ph ph-wrench" style="color: #fbbf24;"></i> Scan & Fix Errors
+                    </button>
                 </div>
             `;
-        }
-        
-        popover.style.left = (e.pageX + 15) + 'px';
-        popover.style.top = (e.pageY + 15) + 'px';
+            
+            // To allow clicking the buttons, we must enable pointer events when we want to interact
+            // We'll temporarily allow pointer events on the popover if the mouse moves onto it
+            popover.style.pointerEvents = 'auto';
         popover.style.display = 'block';
     } else if (!e.altKey) {
         const popover = document.getElementById('thought-lens-popover');
@@ -87,11 +102,25 @@ function handleLensEvent(e) {
 }
 
 document.addEventListener('mouseover', handleLensEvent);
-document.addEventListener('mousemove', handleLensEvent);
+document.addEventListener('mousemove', (e) => {
+    handleLensEvent(e);
+    
+    // Update popover position if it's active and we're not hovering over the popover itself
+    const popover = document.getElementById('thought-lens-popover');
+    if (popover && popover.style.display === 'block' && (!e.target || !e.target.closest('#thought-lens-popover'))) {
+        popover.style.left = (e.pageX + 15) + 'px';
+        popover.style.top = (e.pageY + 15) + 'px';
+    }
+});
 
 document.addEventListener('mouseout', (e) => {
     // We only hide if we're moving completely out of a lens-targeted element
     if (e.target.dataset && e.target.dataset.lensId) {
+        // If they are moving into the popover, don't hide it
+        if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#thought-lens-popover')) {
+            return;
+        }
+        
         const popover = document.getElementById('thought-lens-popover');
         if (popover) {
             popover.style.display = 'none';
