@@ -337,6 +337,13 @@ Do not include any reasoning, markdown formatting, or HTML tags in the JSON. If 
                 // Clean markdown code blocks from the JSON string
                 jsonString = jsonString.replace(/```json/gi, '').replace(/```/g, '').trim();
                 
+                // Extract only the JSON array to ignore any Chain-of-Thought text before/after
+                const startIndex = jsonString.indexOf('[');
+                const endIndex = jsonString.lastIndexOf(']');
+                if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+                    jsonString = jsonString.substring(startIndex, endIndex + 1);
+                }
+                
                 // Parse the actual interactions array
                 const interactions = JSON.parse(jsonString);
                 
