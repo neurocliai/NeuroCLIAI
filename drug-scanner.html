@@ -57,6 +57,58 @@
             transition: opacity 0.2s;
         }
         .btn-scan:hover { opacity: 0.9; }
+
+        /* Premium Upload Zone */
+        .upload-zone {
+            background: rgba(248, 113, 113, 0.04);
+            border: 2px dashed rgba(248, 113, 113, 0.3);
+            border-radius: 16px;
+            padding: 48px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .upload-zone:hover, .upload-zone.drag-over {
+            background: rgba(248, 113, 113, 0.08);
+            border-color: #f87171;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(248, 113, 113, 0.15);
+        }
+        .upload-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        .upload-icon-wrap {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, rgba(248,113,113,0.2), rgba(239,68,68,0.1));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            border: 1px solid rgba(248,113,113,0.3);
+        }
+        .upload-icon-wrap i { font-size: 28px; color: #f87171; }
+        .upload-zone h4 { margin: 0 0 6px; font-size: 1rem; color: #fff; }
+        .upload-zone p  { margin: 0; font-size: 0.85rem; color: var(--text-secondary); }
+        .upload-file-name {
+            display: none;
+            margin-top: 14px;
+            padding: 8px 16px;
+            background: rgba(248,113,113,0.1);
+            border: 1px solid rgba(248,113,113,0.3);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #f87171;
+            word-break: break-all;
+        }
         
         .results-area {
             margin-top: 40px;
@@ -115,12 +167,25 @@
         </div>
 
         <div id="tab-image" class="tab-content">
-            <div style="background: var(--surface-color); border: 2px dashed var(--border-color); padding: 40px; text-align: center; border-radius: 12px; margin-bottom: 20px;">
-                <i class="ph ph-upload-simple" style="font-size: 32px; color: var(--text-secondary); margin-bottom: 10px;"></i>
-                <p>Upload Rx Image (JPG/PNG)</p>
-                <input type="file" style="margin-top: 10px; color: var(--text-secondary);">
+            <div class="upload-zone" id="upload-zone"
+                 ondragover="this.classList.add('drag-over'); event.preventDefault();"
+                 ondragleave="this.classList.remove('drag-over');"
+                 ondrop="handleFileDrop(event)">
+                <input type="file" id="rx-file-input" accept="image/jpeg,image/png"
+                       onchange="handleFileSelect(this)">
+                <div class="upload-icon-wrap">
+                    <i class="ph ph-file-image"></i>
+                </div>
+                <h4>Drag &amp; drop your prescription image</h4>
+                <p>or click anywhere to browse &nbsp;&bull;&nbsp; JPG / PNG supported</p>
+                <div class="upload-file-name" id="upload-file-name">
+                    <i class="ph ph-check-circle" style="margin-right:6px;"></i>
+                    <span id="file-name-text">No file selected</span>
+                </div>
             </div>
-            <button class="btn-scan" onclick="scanDrugs()"><i class="ph ph-scan"></i> Extract & Scan</button>
+            <button class="btn-scan" onclick="scanDrugs()">
+                <i class="ph ph-scan"></i> Extract &amp; Scan
+            </button>
         </div>
 
         <div class="loading" id="loading">
@@ -144,6 +209,40 @@
     </div>
 
     <script>
+        // ── Upload zone helpers ───────────────────────────────────────────────
+        function handleFileSelect(input) {
+            const file = input.files[0];
+            if (!file) return;
+            showUploadedFile(file.name);
+        }
+
+        function handleFileDrop(event) {
+            event.preventDefault();
+            const zone = document.getElementById('upload-zone');
+            zone.classList.remove('drag-over');
+            const file = event.dataTransfer.files[0];
+            if (!file) return;
+            // Transfer to real input
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            document.getElementById('rx-file-input').files = dt.files;
+            showUploadedFile(file.name);
+        }
+
+        function showUploadedFile(name) {
+            const tag = document.getElementById('upload-file-name');
+            const nameText = document.getElementById('file-name-text');
+            const icon = document.querySelector('.upload-icon-wrap i');
+            nameText.textContent = name;
+            tag.style.display = 'block';
+            icon.className = 'ph ph-check-circle';
+            document.querySelector('.upload-icon-wrap').style.background =
+                'linear-gradient(135deg, rgba(34,197,94,0.2), rgba(16,185,129,0.1))';
+            document.querySelector('.upload-icon-wrap').style.borderColor = 'rgba(34,197,94,0.4)';
+            icon.style.color = '#4ade80';
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
