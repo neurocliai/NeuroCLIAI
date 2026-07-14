@@ -1,7 +1,9 @@
 // Thought-Lens (Hover-to-Explain)
 
+window.isLensModeActive = false;
+
 function handleLensEvent(e) {
-    if (e.altKey && e.target && e.target.id !== 'thought-lens-popover' && !e.target.closest('#thought-lens-popover')) {
+    if (window.isLensModeActive && e.target && e.target.id !== 'thought-lens-popover' && !e.target.closest('#thought-lens-popover')) {
         let targetNode = e.target;
         
         // Don't trigger on the main body or massive containers to avoid highlighting the whole page
@@ -92,7 +94,7 @@ function handleLensEvent(e) {
             // We'll temporarily allow pointer events on the popover if the mouse moves onto it
             popover.style.pointerEvents = 'auto';
         popover.style.display = 'block';
-    } else if (!e.altKey) {
+    } else if (!window.isLensModeActive) {
         const popover = document.getElementById('thought-lens-popover');
         if (popover && popover.style.display === 'block') {
             popover.style.display = 'none';
@@ -128,6 +130,27 @@ document.addEventListener('mouseout', (e) => {
         resetLensHighlight();
     }
 });
+
+// Setup Lens Toggle Button
+const lensBtn = document.getElementById('lens-toggle-btn');
+if (lensBtn) {
+    lensBtn.addEventListener('click', () => {
+        window.isLensModeActive = !window.isLensModeActive;
+        if (window.isLensModeActive) {
+            lensBtn.style.background = 'rgba(192, 132, 252, 0.2)';
+            lensBtn.style.boxShadow = '0 0 10px rgba(192, 132, 252, 0.5)';
+        } else {
+            lensBtn.style.background = '';
+            lensBtn.style.boxShadow = '';
+            
+            // Clean up popover if disabling
+            const popover = document.getElementById('thought-lens-popover');
+            if (popover) popover.style.display = 'none';
+            resetLensHighlight();
+        }
+    });
+}
+
 
 document.addEventListener('keyup', (e) => {
     if (e.key === 'Alt') {
