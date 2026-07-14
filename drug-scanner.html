@@ -284,7 +284,7 @@
                 });
                 
                 contentPayload = [
-                    { type: 'text', text: 'Act as a clinical pharmacologist. Extract the medication names from this prescription image, then provide a highly detailed, comprehensive drug interaction and safety report.\nFormat your response ENTIRELY in HTML using the following structure for each interaction or finding:\n<div class="interaction-card">\n    <h3><i class="ph ph-warning-circle" style="color: #ef4444;"></i> [Severity]: [Drugs involved]</h3>\n    <p>[Detailed explanation of interaction or usage, and clinical recommendations]</p>\n    <ul><li>[Detailed point 1]</li><li>[Detailed point 2]</li></ul>\n</div>\nIf only one drug is provided, provide its primary uses, common side effects, and major warnings in the same highly detailed HTML format.\nCRITICAL: Output ONLY the requested HTML. Do not include any introduction, internal reasoning, chain of thought, or conversational filler. Start your response directly with the <div class="interaction-card"> tag. Make sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for bold text, NEVER use markdown. Do not truncate your response; provide full detail.' },
+                    { type: 'text', text: 'Act as a clinical pharmacologist. Extract the medication names from this prescription image, then provide a highly detailed drug interaction and safety report.\nRespond STRICTLY with a JSON array of objects. Each object must have these exact keys:\n- "severity" (string: Major, Moderate, Minor, or Info)\n- "title" (string: short title of interaction or finding)\n- "description" (string: detailed explanation)\n- "points" (array of strings: list of detailed bullet points)\nDo not include any reasoning, markdown formatting, or HTML tags in the JSON. If only one drug is provided, use the same format to list its uses, side effects, and warnings.' },
                     { type: 'image_url', image_url: { url: base64Image } }
                 ];
             } else {
@@ -298,19 +298,13 @@
                 loadingArea.style.display = 'block';
                 
                 contentPayload = `Act as a clinical pharmacologist. The user has provided the following medications: "${drugInput}".
-Provide a highly detailed, comprehensive drug interaction and safety report. 
-Format your response ENTIRELY in HTML using the following structure for each interaction or finding:
-<div class="interaction-card">
-    <h3><i class="ph ph-warning-circle" style="color: #ef4444;"></i> [Severity]: [Drugs involved]</h3>
-    <p>[Detailed explanation of interaction or usage, and clinical recommendations]</p>
-    <ul>
-        <li>[Detailed point 1]</li>
-        <li>[Detailed point 2]</li>
-    </ul>
-</div>
-If only one drug is provided, provide its primary uses, common side effects, and major warnings in the same highly detailed HTML format. 
-CRITICAL: Output ONLY the requested HTML. Do not include any introduction, internal reasoning, chain of thought, or conversational filler. Start your response directly with the <div class="interaction-card"> tag.
-Make sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for bold text, NEVER use markdown. Do not truncate your response; provide full detail.`;
+Provide a highly detailed drug interaction and safety report. 
+Respond STRICTLY with a JSON array of objects. Each object must have these exact keys:
+- "severity" (string: Major, Moderate, Minor, or Info)
+- "title" (string: short title of interaction or finding)
+- "description" (string: detailed explanation)
+- "points" (array of strings: list of detailed bullet points)
+Do not include any reasoning, markdown formatting, or HTML tags in the JSON. If only one drug is provided, use the same format to list its uses, side effects, and warnings.`;
             }
             
             try {
@@ -320,48 +314,53 @@ Make sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for
                     body: JSON.stringify({
                         messages: [{ role: 'user', content: contentPayload }],
                         model: 'openai',
+                        jsonMode: true,
                         stream: false
                     })
                 });
 
-                let htmlContent = await response.text();
+                let textResponse = await response.text();
+                let jsonString = textResponse;
 
-                // Strip JSON wrapper if the API returned a JSON object instead of plain text
+                // Strip JSON wrapper if the API returned an OpenAI object wrapper
                 try {
-                    const parsed = JSON.parse(htmlContent);
-                    // Handle OpenAI-style response: { choices: [{ message: { content: "..." } }] }
+                    const parsed = JSON.parse(textResponse);
                     if (parsed.choices?.[0]?.message?.content) {
-                        htmlContent = parsed.choices[0].message.content;
+                        jsonString = parsed.choices[0].message.content;
                     } else if (parsed.content) {
-                        htmlContent = parsed.content;
-                    } else if (typeof parsed === 'object') {
-                        // Last resort: grab any string field that looks like HTML
-                        const vals = Object.values(parsed);
-                        const htmlVal = vals.find(v => typeof v === 'string' && v.includes('<'));
-                        if (htmlVal) htmlContent = htmlVal;
+                        jsonString = parsed.content;
                     }
                 } catch (e) {
-                    // Not JSON — plain text response, use as-is
+                    // Ignore, it might be raw text
+                }
+                
+                // Clean markdown code blocks from the JSON string
+                jsonString = jsonString.replace(/```json/gi, '').replace(/```/g, '').trim();
+                
+                // Parse the actual interactions array
+                const interactions = JSON.parse(jsonString);
+                
+                if (!Array.isArray(interactions)) {
+                    throw new Error("API did not return a valid JSON array.");
                 }
 
-                // Strip markdown code fences
-                htmlContent = htmlContent.replace(/```html/gi, '').replace(/```/g, '');
-
-                // Extract only the interaction cards to ignore AI Chain-of-Thought or reasoning
-                const cardsMatch = htmlContent.match(/<div[^>]*class="[^"]*interaction-card[^"]*"[^>]*>[\s\S]*?<\/div>/gi);
-                if (cardsMatch && cardsMatch.length > 0) {
-                    htmlContent = cardsMatch.join('\n');
-                } else if (htmlContent.includes('<div')) {
-                    htmlContent = htmlContent.substring(htmlContent.indexOf('<div'));
+                let finalHtml = '';
+                for (const item of interactions) {
+                    const severityColor = item.severity.toLowerCase() === 'info' ? '#3b82f6' : (item.severity.toLowerCase() === 'minor' ? '#facc15' : (item.severity.toLowerCase() === 'moderate' ? '#fb923c' : '#ef4444'));
+                    const iconClass = item.severity.toLowerCase() === 'info' ? 'ph-info' : 'ph-warning-circle';
+                    
+                    finalHtml += `
+                    <div class="interaction-card">
+                        <h3><i class="ph ${iconClass}" style="color: ${severityColor};"></i> [${item.severity}] ${item.title || 'Interaction'}</h3>
+                        <p>${item.description || ''}</p>
+                        ${item.points && item.points.length > 0 ? `<ul>${item.points.map(p => `<li>${p}</li>`).join('')}</ul>` : ''}
+                    </div>`;
                 }
-
-                // Strip leftover markdown bold/italic
-                htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 
                 loadingArea.style.display = 'none';
                 resultsArea.style.display = 'block';
                 
-                resultsArea.innerHTML = '<h2 style="margin-top: 0;">Interaction Report</h2>' + htmlContent;
+                resultsArea.innerHTML = '<h2 style="margin-top: 0;">Interaction Report</h2>' + finalHtml;
                 
             } catch (err) {
                 console.error(err);
