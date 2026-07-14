@@ -284,7 +284,7 @@
                 });
                 
                 contentPayload = [
-                    { type: 'text', text: 'Act as a clinical pharmacologist. Extract the medication names from this prescription image, then provide a highly detailed, comprehensive drug interaction and safety report.\nFormat your response ENTIRELY in HTML using the following structure for each interaction or finding:\n<div class="interaction-card">\n    <h3><i class="ph ph-warning-circle" style="color: #ef4444;"></i> [Severity]: [Drugs involved]</h3>\n    <p>[Detailed explanation of interaction or usage, and clinical recommendations]</p>\n    <ul><li>[Detailed point 1]</li><li>[Detailed point 2]</li></ul>\n</div>\nIf only one drug is provided, provide its primary uses, common side effects, and major warnings in the same highly detailed HTML format.\nMake sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for bold text, NEVER use markdown. Do not truncate your response; provide full detail.' },
+                    { type: 'text', text: 'Act as a clinical pharmacologist. Extract the medication names from this prescription image, then provide a highly detailed, comprehensive drug interaction and safety report.\nFormat your response ENTIRELY in HTML using the following structure for each interaction or finding:\n<div class="interaction-card">\n    <h3><i class="ph ph-warning-circle" style="color: #ef4444;"></i> [Severity]: [Drugs involved]</h3>\n    <p>[Detailed explanation of interaction or usage, and clinical recommendations]</p>\n    <ul><li>[Detailed point 1]</li><li>[Detailed point 2]</li></ul>\n</div>\nIf only one drug is provided, provide its primary uses, common side effects, and major warnings in the same highly detailed HTML format.\nCRITICAL: Output ONLY the requested HTML. Do not include any introduction, internal reasoning, chain of thought, or conversational filler. Start your response directly with the <div class="interaction-card"> tag. Make sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for bold text, NEVER use markdown. Do not truncate your response; provide full detail.' },
                     { type: 'image_url', image_url: { url: base64Image } }
                 ];
             } else {
@@ -309,6 +309,7 @@ Format your response ENTIRELY in HTML using the following structure for each int
     </ul>
 </div>
 If only one drug is provided, provide its primary uses, common side effects, and major warnings in the same highly detailed HTML format. 
+CRITICAL: Output ONLY the requested HTML. Do not include any introduction, internal reasoning, chain of thought, or conversational filler. Start your response directly with the <div class="interaction-card"> tag.
 Make sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for bold text, NEVER use markdown. Do not truncate your response; provide full detail.`;
             }
             
