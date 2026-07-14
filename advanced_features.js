@@ -1,11 +1,17 @@
 // Thought-Lens (Hover-to-Explain)
-document.addEventListener('mouseover', (e) => {
-    // Trigger if Alt key is pressed and we are not hovering over the popover itself
-    if (e.altKey && e.target.id !== 'thought-lens-popover' && !e.target.closest('#thought-lens-popover')) {
+
+function handleLensEvent(e) {
+    if (e.altKey && e.target && e.target.id !== 'thought-lens-popover' && !e.target.closest('#thought-lens-popover')) {
         let targetNode = e.target;
         
-        if (!document.getElementById('thought-lens-popover')) {
-            const popover = document.createElement('div');
+        // Don't trigger on the main body or massive containers to avoid highlighting the whole page
+        if (targetNode.tagName === 'BODY' || targetNode.tagName === 'HTML' || targetNode.id === 'chat-container') {
+            return;
+        }
+
+        let popover = document.getElementById('thought-lens-popover');
+        if (!popover) {
+            popover = document.createElement('div');
             popover.id = 'thought-lens-popover';
             popover.style.position = 'absolute';
             popover.style.background = 'rgba(15, 23, 42, 0.95)';
@@ -23,66 +29,65 @@ document.addEventListener('mouseover', (e) => {
             document.body.appendChild(popover);
         }
         
-        const popover = document.getElementById('thought-lens-popover');
-        
         // Extract a word from the text content
         const textContent = targetNode.innerText || targetNode.textContent;
         if (!textContent || textContent.trim() === '') return;
         
-        const wordMatch = textContent.trim().match(/\b\w+\b/g);
-        const word = wordMatch ? wordMatch[0] : 'element';
-        
-        const probabilities = [0.98, 0.94, 0.89, 0.99, 0.95, 0.82];
-        const prob = probabilities[Math.floor(Math.random() * probabilities.length)];
-        const reasons = [
-            "Matches semantic intent of user query.",
-            "Highest probability token in this context.",
-            "Aligned with system prompt formatting constraints.",
-            "Optimal choice based on preceding n-gram context.",
-            "Selected via beam search optimization.",
-            "Maintains referential coherence with previous turn."
-        ];
-        const reason = reasons[Math.floor(Math.random() * reasons.length)];
-        
-        // Highlight the hovered element temporarily
-        const originalBg = targetNode.style.backgroundColor;
-        const originalOutline = targetNode.style.outline;
-        targetNode.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
-        targetNode.style.outline = '1px dashed #3b82f6';
-        targetNode.style.borderRadius = '4px';
-        
-        // Save the element so we can reset it on mouseout
-        popover.dataset.targetElementId = Math.random().toString(36).substr(2, 9);
-        targetNode.dataset.lensId = popover.dataset.targetElementId;
-        targetNode.dataset.origBg = originalBg || '';
-        targetNode.dataset.origOutline = originalOutline || '';
-        
-        popover.innerHTML = `
-            <strong style="color: #60a5fa; font-size: 14px;">Focus: "${word.substring(0, 20)}"</strong><br/>
-            <span style="color: #34d399;">Probability: ${(prob * 100).toFixed(1)}%</span><br/>
-            <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <i class="ph ph-info"></i> ${reason}
-            </div>
-        `;
+        // Only re-render if we moved to a new element
+        if (targetNode.dataset.lensId !== popover.dataset.targetElementId) {
+            resetLensHighlight();
+            
+            const wordMatch = textContent.trim().match(/\b\w+\b/g);
+            const word = wordMatch ? wordMatch[0] : 'element';
+            
+            const probabilities = [0.98, 0.94, 0.89, 0.99, 0.95, 0.82];
+            const prob = probabilities[Math.floor(Math.random() * probabilities.length)];
+            const reasons = [
+                "Matches semantic intent of user query.",
+                "Highest probability token in this context.",
+                "Aligned with system prompt formatting constraints.",
+                "Optimal choice based on preceding n-gram context.",
+                "Selected via beam search optimization.",
+                "Maintains referential coherence with previous turn."
+            ];
+            const reason = reasons[Math.floor(Math.random() * reasons.length)];
+            
+            // Highlight the hovered element temporarily
+            const originalBg = targetNode.style.backgroundColor;
+            const originalOutline = targetNode.style.outline;
+            targetNode.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+            targetNode.style.outline = '1px dashed #3b82f6';
+            targetNode.style.borderRadius = '4px';
+            
+            // Save the element so we can reset it on mouseout
+            popover.dataset.targetElementId = Math.random().toString(36).substr(2, 9);
+            targetNode.dataset.lensId = popover.dataset.targetElementId;
+            targetNode.dataset.origBg = originalBg || '';
+            targetNode.dataset.origOutline = originalOutline || '';
+            
+            popover.innerHTML = `
+                <strong style="color: #60a5fa; font-size: 14px;">Focus: "${word.substring(0, 20)}"</strong><br/>
+                <span style="color: #34d399;">Probability: ${(prob * 100).toFixed(1)}%</span><br/>
+                <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <i class="ph ph-info"></i> ${reason}
+                </div>
+            `;
+        }
         
         popover.style.left = (e.pageX + 15) + 'px';
         popover.style.top = (e.pageY + 15) + 'px';
         popover.style.display = 'block';
-    }
-});
-
-document.addEventListener('mousemove', (e) => {
-    const popover = document.getElementById('thought-lens-popover');
-    if (popover && popover.style.display === 'block') {
-        if (!e.altKey) {
+    } else if (!e.altKey) {
+        const popover = document.getElementById('thought-lens-popover');
+        if (popover && popover.style.display === 'block') {
             popover.style.display = 'none';
             resetLensHighlight();
-        } else {
-            popover.style.left = (e.pageX + 15) + 'px';
-            popover.style.top = (e.pageY + 15) + 'px';
         }
     }
-});
+}
+
+document.addEventListener('mouseover', handleLensEvent);
+document.addEventListener('mousemove', handleLensEvent);
 
 document.addEventListener('mouseout', (e) => {
     // We only hide if we're moving completely out of a lens-targeted element
