@@ -272,99 +272,201 @@ function showLensPopover(boxRect, scannedText) {
 
 
 // Frictionless Voice-to-UI Architecture
-if ('webkitSpeechRecognition' in window) {
-    const recognition = new webkitSpeechRecognition();
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
+    recognition.lang = 'en-US';
     
-    recognition.onstart = function() {
-        console.log("Voice-to-UI listening...");
-        // Add a visual indicator
-        if(!document.getElementById('voice-listening-indicator')) {
-            const ind = document.createElement('div');
-            ind.id = 'voice-listening-indicator';
-            ind.innerHTML = '<i class="ph ph-microphone"></i> Voice UI Active';
-            ind.style.position = 'fixed';
-            ind.style.bottom = '20px';
-            ind.style.left = '20px';
-            ind.style.background = 'rgba(16, 185, 129, 0.2)';
-            ind.style.color = '#10b981';
-            ind.style.border = '1px solid #10b981';
-            ind.style.padding = '8px 12px';
-            ind.style.borderRadius = '20px';
-            ind.style.fontSize = '12px';
-            ind.style.zIndex = '9999';
-            ind.style.display = 'flex';
-            ind.style.alignItems = 'center';
-            ind.style.gap = '6px';
-            ind.style.animation = 'voicepulse 2s infinite';
+    let voiceActive = false;
+    let silenceTimer = null;
+    
+    // ── Visual indicator badge ──────────────────────────────────────────────
+    function createVoiceIndicator() {
+        if (document.getElementById('voice-listening-indicator')) return;
+        
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes voicepulse { 
+                0%   { opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+                50%  { opacity: 1;   box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+                100% { opacity: 0.8; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            }
+            #voice-listening-indicator { animation: voicepulse 1.5s infinite; }
+        `;
+        document.head.appendChild(style);
+        
+        const ind = document.createElement('div');
+        ind.id = 'voice-listening-indicator';
+        ind.style.cssText = `
+            position: fixed; bottom: 80px; left: 20px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-family: Inter, sans-serif;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            max-width: 280px;
+        `;
+        ind.innerHTML = `<i class="ph ph-microphone" style="font-size:16px;"></i><span id="voice-transcript-text">Listening…</span>`;
+        document.body.appendChild(ind);
+    }
+    
+    function setVoiceTranscript(text) {
+        const el = document.getElementById('voice-transcript-text');
+        if (el) el.textContent = text || 'Listening…';
+    }
+    
+    function hideVoiceIndicator() {
+        const ind = document.getElementById('voice-listening-indicator');
+        if (ind) ind.style.display = 'none';
+    }
+    
+    function showVoiceIndicator() {
+        const ind = document.getElementById('voice-listening-indicator');
+        if (ind) { ind.style.display = 'flex'; }
+        else { createVoiceIndicator(); }
+    }
+    
+    // ── Core: dispatch a spoken phrase as a real chat message ──────────────
+    function sendVoicePrompt(text) {
+        const input = document.getElementById('prompt-input');
+        const form  = document.getElementById('chat-form');
+        if (!input || !form) return;
+        input.value = text;
+        form.dispatchEvent(new Event('submit'));
+    }
+    
+    // ── UI command handler ─────────────────────────────────────────────────
+    function handleVoiceCommand(text) {
+        const t = text.toLowerCase().trim();
+        
+        // Scroll commands
+        if (t.includes('scroll down') || t.includes('go down')) {
+            const c = document.getElementById('chat-container');
+            if (c) c.scrollBy({ top: 300, behavior: 'smooth' });
+            return true;
+        }
+        if (t.includes('scroll up') || t.includes('go up') || t.includes('scroll to top')) {
+            const c = document.getElementById('chat-container');
+            if (c) c.scrollBy({ top: -300, behavior: 'smooth' });
+            return true;
+        }
+        
+        // New chat
+        if (t.includes('new chat') || t.includes('start new chat') || t.includes('clear chat')) {
+            const btn = document.getElementById('new-chat-btn');
+            if (btn) btn.click();
+            return true;
+        }
+        
+        // Copy last response
+        if (t.includes('copy last') || t.includes('copy response') || t.includes('copy that')) {
+            const msgs = document.querySelectorAll('.message.ai .message-content');
+            if (msgs.length > 0) {
+                navigator.clipboard.writeText(msgs[msgs.length - 1].innerText).catch(() => {});
+            }
+            return true;
+        }
+        
+        // Toggle lens
+        if (t.includes('open lens') || t.includes('activate lens') || t.includes('ai lens')) {
+            if (typeof window.toggleLensMode === 'function') window.toggleLensMode();
+            return true;
+        }
+        
+        return false; // Not a UI command — treat as a chat message
+    }
+    
+    // ── Speech result handler ──────────────────────────────────────────────
+    let lastFinalTranscript = '';
+    
+    recognition.onresult = function(event) {
+        let interimText = '';
+        let finalText   = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const res = event.results[i];
+            if (res.isFinal) {
+                finalText += res[0].transcript;
+            } else {
+                interimText += res[0].transcript;
+            }
+        }
+        
+        // Show live transcript in indicator
+        setVoiceTranscript(finalText || interimText || 'Listening…');
+        
+        if (finalText) {
+            const text = finalText.trim();
+            if (text === lastFinalTranscript) return; // Deduplicate
+            lastFinalTranscript = text;
             
-            const style = document.createElement('style');
-            style.innerHTML = '@keyframes voicepulse { 0% { opacity: 0.7; } 50% { opacity: 1; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); } 100% { opacity: 0.7; } }';
-            document.head.appendChild(style);
-            document.body.appendChild(ind);
+            // Try UI command first; if not, send to AI
+            const wasCommand = handleVoiceCommand(text);
+            if (!wasCommand) {
+                setVoiceTranscript(`Sending: "${text}"`);
+                sendVoicePrompt(text);
+            }
+            
+            // Reset silence timer
+            clearTimeout(silenceTimer);
+            silenceTimer = setTimeout(() => {
+                setVoiceTranscript('Listening…');
+                lastFinalTranscript = '';
+            }, 2000);
         }
     };
     
-    let lastProcessedTranscript = '';
+    recognition.onstart = function() {
+        voiceActive = true;
+        showVoiceIndicator();
+        console.log('[AI Voice] Listening…');
+    };
     
-    recognition.onresult = function(event) {
-        let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-            } else {
-                interimTranscript += event.results[i][0].transcript;
-            }
-        }
-        
-        const text = (finalTranscript || interimTranscript).toLowerCase();
-        
-        if (text === lastProcessedTranscript) return;
-        lastProcessedTranscript = text;
-        
-        // UI Morphing logic based on speech
-        if (text.includes('make that last paragraph red') || text.includes('make it red')) {
-            const msgs = document.querySelectorAll('.message-content, p, div');
-            if(msgs.length > 0) {
-                // Find a decent target, like the last message or element
-                const target = document.querySelector('.message:last-child') || msgs[msgs.length - 1];
-                target.style.transition = 'all 0.5s ease';
-                target.style.color = '#f87171'; // red
-            }
-        }
-        
-        if (text.includes('actually make it blue') || text.includes('make it blue')) {
-            const msgs = document.querySelectorAll('.message:last-child, .message-content');
-            if(msgs.length > 0) {
-                const target = document.querySelector('.message:last-child') || msgs[msgs.length - 1];
-                target.style.transition = 'all 0.5s ease';
-                target.style.color = '#60a5fa'; // blue
-            }
-        }
-        
-        if (text.includes('move it to the top') || text.includes('move to top') || text.includes('move to the top')) {
-            const container = document.getElementById('chat-container') || document.body;
-            const target = document.querySelector('.message:last-child');
-            if(target && container) {
-                target.style.transition = 'transform 0.5s ease';
-                container.prepend(target);
-                container.scrollTop = 0;
-            }
+    recognition.onerror = function(e) {
+        console.warn('[AI Voice] Error:', e.error);
+        if (e.error !== 'no-speech') {
+            setVoiceTranscript(`Error: ${e.error}`);
         }
     };
     
     recognition.onend = function() {
-        // Auto-restart if it stops naturally
-        setTimeout(() => {
-            try { recognition.start(); } catch(e) {}
-        }, 1000);
+        // Auto-restart to keep it alive
+        if (voiceActive) {
+            setTimeout(() => {
+                try { recognition.start(); } catch(err) {}
+            }, 300);
+        }
     };
     
-    // Start listening on first user interaction to bypass browser autoplay blocks
-    document.addEventListener('click', () => {
+    // ── Expose start/stop for voice studio button ──────────────────────────
+    window.startVoiceUI = function() {
+        voiceActive = true;
         try { recognition.start(); } catch(e) {}
-    }, { once: true });
+    };
+    window.stopVoiceUI = function() {
+        voiceActive = false;
+        hideVoiceIndicator();
+        try { recognition.stop(); } catch(e) {}
+    };
+    
+    // Start on first user interaction (browser policy requires this)
+    document.addEventListener('click', function startOnce() {
+        if (!voiceActive) {
+            voiceActive = true;
+            try { recognition.start(); } catch(e) {}
+        }
+        document.removeEventListener('click', startOnce);
+    });
+
+} else {
+    console.warn('[AI Voice] SpeechRecognition not supported in this browser.');
 }
