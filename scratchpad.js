@@ -115,40 +115,20 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         const base64Data = imageDataUrl.split(',')[1];
 
-        // Hardcoded API Key for seamless production experience
-        const apiKey = "AIzaSyA_zGsrWGhICMpiOvXAfo17g0UECpLHTXI";
-
-        const promptText = "You are an advanced interactive AI assistant connected to a visual scratchpad. The user has hand-drawn something, written a math equation, or sketched a UI layout. Carefully analyze the image and execute the intent. If it looks like code, write the code. If it looks like math, solve it. If it looks like a UI wireframe description, provide HTML/CSS. If it's just a regular drawing, describe it. Format your output in beautifully styled Markdown.";
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        // API key lives securely on the server — NEVER exposed to the browser
+        const response = await fetch('/api/analyze-scribble', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: promptText },
-                        {
-                            inlineData: {
-                                mimeType: "image/jpeg",
-                                data: base64Data
-                            }
-                        }
-                    ]
-                }]
-            })
+            body: JSON.stringify({ image: base64Data })
         });
 
-        const data = await response.json();
-        
         if (!response.ok) {
-            if (response.status === 400 && data.error && data.error.message.includes('API key not valid')) {
-                localStorage.removeItem('GEMINI_API_KEY');
-                throw new Error("Invalid API Key. Please refresh and try again.");
-            }
-            throw new Error(data.error?.message || "Failed to analyze image via Gemini API");
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Server error: ${response.status}`);
         }
         
-        const aiText = data.candidates[0].content.parts[0].text;
+        const data = await response.json();
+        const aiText = data.markdown;
 
         // Render Markdown
         resultsPanel.innerHTML = `
@@ -170,3 +150,4 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
         `;
     }
 });
+
