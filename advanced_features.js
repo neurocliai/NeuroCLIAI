@@ -382,7 +382,75 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             return true;
         }
         
+        // ── Highlight last AI response in a spoken color ─────────────────
+        const colorMap = {
+            'yellow':  '#fef08a',
+            'red':     '#fca5a5',
+            'blue':    '#93c5fd',
+            'green':   '#86efac',
+            'pink':    '#f9a8d4',
+            'orange':  '#fdba74',
+            'purple':  '#c4b5fd',
+            'cyan':    '#67e8f9',
+            'white':   '#ffffff',
+            'lime':    '#bef264',
+        };
+        
+        // Match phrases like: "highlight in yellow", "highlight yellow", "make it yellow", "highlight the text in blue"
+        const highlightPattern = /highlight|color|colour|mark|make it/i;
+        if (highlightPattern.test(t)) {
+            let matchedColor = null;
+            let matchedHex   = null;
+            
+            for (const [colorName, hex] of Object.entries(colorMap)) {
+                if (t.includes(colorName)) {
+                    matchedColor = colorName;
+                    matchedHex   = hex;
+                    break;
+                }
+            }
+            
+            if (matchedHex) {
+                // Remove any previous highlight first
+                document.querySelectorAll('.voice-highlighted').forEach(el => {
+                    el.style.backgroundColor = '';
+                    el.style.borderRadius = '';
+                    el.style.padding = '';
+                    el.classList.remove('voice-highlighted');
+                });
+                
+                // Apply highlight to the last AI message content
+                const aiMsgs = document.querySelectorAll('.message.ai .message-content');
+                if (aiMsgs.length > 0) {
+                    const lastMsg = aiMsgs[aiMsgs.length - 1];
+                    lastMsg.style.transition = 'background-color 0.4s ease';
+                    lastMsg.style.backgroundColor = matchedHex;
+                    lastMsg.style.borderRadius = '8px';
+                    lastMsg.style.padding = '8px';
+                    lastMsg.style.color = '#0f172a'; // dark text for readability
+                    lastMsg.classList.add('voice-highlighted');
+                    setVoiceTranscript(`✅ Highlighted in ${matchedColor}!`);
+                }
+                return true;
+            }
+        }
+        
+        // Remove highlight command
+        if (t.includes('remove highlight') || t.includes('clear highlight') || t.includes('unhighlight')) {
+            document.querySelectorAll('.voice-highlighted').forEach(el => {
+                el.style.transition = 'background-color 0.4s ease';
+                el.style.backgroundColor = '';
+                el.style.borderRadius = '';
+                el.style.padding = '';
+                el.style.color = '';
+                el.classList.remove('voice-highlighted');
+            });
+            setVoiceTranscript('✅ Highlight removed!');
+            return true;
+        }
+        
         return false; // Not a UI command — treat as a chat message
+
     }
     
     // ── Speech result handler ──────────────────────────────────────────────
