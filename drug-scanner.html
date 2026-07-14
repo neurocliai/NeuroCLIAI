@@ -347,6 +347,14 @@ Make sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for
                 // Strip markdown code fences
                 htmlContent = htmlContent.replace(/```html/gi, '').replace(/```/g, '');
 
+                // Extract only the interaction cards to ignore AI Chain-of-Thought or reasoning
+                const cardsMatch = htmlContent.match(/<div[^>]*class="[^"]*interaction-card[^"]*"[^>]*>[\s\S]*?<\/div>/gi);
+                if (cardsMatch && cardsMatch.length > 0) {
+                    htmlContent = cardsMatch.join('\n');
+                } else if (htmlContent.includes('<div')) {
+                    htmlContent = htmlContent.substring(htmlContent.indexOf('<div'));
+                }
+
                 // Strip leftover markdown bold/italic
                 htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 
