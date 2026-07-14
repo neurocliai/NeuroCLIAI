@@ -316,12 +316,13 @@
                 const contextString = webInfo ? `\nREAL-TIME WEB SEARCH CONTEXT: "${webInfo}"\nUse this context to identify the drug if you don't recognize the brand name.` : '';
                 
                 contentPayload = `Act as a clinical pharmacologist. The user has provided the following medications: "${drugInput}".${contextString}
-Provide a highly detailed drug interaction and safety report. If you encounter an unrecognized or regional brand name (e.g. Naxdom), DO NOT say it is unknown. Instead, intelligently infer its active generic ingredients (e.g. Naproxen + Domperidone) and base your report entirely on those generic ingredients.
+Provide a drug interaction and safety report. If you encounter an unrecognized or regional brand name (e.g. Naxdom), DO NOT say it is unknown. Instead, intelligently infer its active generic ingredients (e.g. Naproxen + Domperidone) and base your report entirely on those generic ingredients.
+CRITICAL: Keep all descriptions and points extremely short and concise (max 1 sentence) to prevent API response truncation.
 Respond STRICTLY with a JSON array of objects. Each object must have these exact keys:
 - "severity" (string: Major, Moderate, Minor, or Info)
 - "title" (string: short title of interaction or finding)
-- "description" (string: detailed explanation)
-- "points" (array of strings: list of detailed bullet points)
+- "description" (string: extremely brief explanation)
+- "points" (array of strings: 1-2 very short actionable bullet points)
 Do not include any reasoning, markdown formatting, or HTML tags in the JSON. If only one drug is provided, use the same format to list its uses, side effects, and warnings.`;
             }
             
