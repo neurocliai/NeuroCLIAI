@@ -90,9 +90,9 @@ function handleLensEvent(e) {
                 </div>
             `;
             
-            // To allow clicking the buttons, we must enable pointer events when we want to interact
             // We'll temporarily allow pointer events on the popover if the mouse moves onto it
             popover.style.pointerEvents = 'auto';
+        }
         popover.style.display = 'block';
     } else if (!window.isLensModeActive) {
         const popover = document.getElementById('thought-lens-popover');
