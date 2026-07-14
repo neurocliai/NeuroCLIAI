@@ -1714,7 +1714,7 @@ textarea::placeholder {
 .canvas-board {
     flex: 1;
     position: relative;
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* Sticky Note Styles */

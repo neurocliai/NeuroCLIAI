@@ -1175,16 +1175,17 @@ function createStickyNote(content, title="Note") {
     const note = document.createElement('div');
     note.className = 'sticky-note';
     
-    // Random position within canvas board bounds
-    // Rough estimate, width ~250px
-    const maxX = Math.max(0, canvasBoard.clientWidth - 260);
-    const maxY = Math.max(0, canvasBoard.clientHeight - 200);
+    // Use fallback dimensions when canvas is closed (clientWidth/Height = 0)
+    const boardW = canvasBoard.clientWidth  || 380;
+    const boardH = canvasBoard.clientHeight || 500;
+    const maxX = Math.max(0, boardW - 270);
+    const maxY = Math.max(0, boardH - 210);
     
     const randomX = Math.floor(Math.random() * maxX);
     const randomY = Math.floor(Math.random() * maxY) + 10;
     
     note.style.left = randomX + 'px';
-    note.style.top = randomY + 'px';
+    note.style.top  = randomY + 'px';
 
     const header = document.createElement('div');
     header.className = 'sticky-header';
@@ -1231,10 +1232,13 @@ function createStickyNote(content, title="Note") {
 
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
+        // Use board-relative coords so drag works in both normal and fullscreen mode
+        const boardRect = canvasBoard.getBoundingClientRect();
         const dx = e.clientX - startX;
         const dy = e.clientY - startY;
         note.style.left = (initialLeft + dx) + 'px';
-        note.style.top = (initialTop + dy) + 'px';
+        note.style.top  = (initialTop  + dy) + 'px';
+        e.preventDefault();
     });
 
     document.addEventListener('mouseup', (e) => {
