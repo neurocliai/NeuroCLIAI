@@ -1,7 +1,7 @@
 // Thought-Lens (Hover-to-Explain)
 document.addEventListener('mouseover', (e) => {
-    // Only trigger if Alt key is pressed and we are hovering over text-like elements
-    if (e.altKey && (e.target.tagName === 'P' || e.target.tagName === 'SPAN' || e.target.tagName === 'DIV' || e.target.tagName === 'LI')) {
+    // Trigger if Alt key is pressed and we are not hovering over the popover itself
+    if (e.altKey && e.target.id !== 'thought-lens-popover' && !e.target.closest('#thought-lens-popover')) {
         let targetNode = e.target;
         
         if (!document.getElementById('thought-lens-popover')) {
@@ -25,11 +25,11 @@ document.addEventListener('mouseover', (e) => {
         
         const popover = document.getElementById('thought-lens-popover');
         
-        // Simple synthetic explanation generator based on node content
-        const textContent = targetNode.textContent.trim();
-        if (!textContent) return;
+        // Extract a word from the text content
+        const textContent = targetNode.innerText || targetNode.textContent;
+        if (!textContent || textContent.trim() === '') return;
         
-        const wordMatch = textContent.match(/\b\w+\b/g);
+        const wordMatch = textContent.trim().match(/\b\w+\b/g);
         const word = wordMatch ? wordMatch[0] : 'element';
         
         const probabilities = [0.98, 0.94, 0.89, 0.99, 0.95, 0.82];
@@ -43,6 +43,19 @@ document.addEventListener('mouseover', (e) => {
             "Maintains referential coherence with previous turn."
         ];
         const reason = reasons[Math.floor(Math.random() * reasons.length)];
+        
+        // Highlight the hovered element temporarily
+        const originalBg = targetNode.style.backgroundColor;
+        const originalOutline = targetNode.style.outline;
+        targetNode.style.backgroundColor = 'rgba(59, 130, 246, 0.2)';
+        targetNode.style.outline = '1px dashed #3b82f6';
+        targetNode.style.borderRadius = '4px';
+        
+        // Save the element so we can reset it on mouseout
+        popover.dataset.targetElementId = Math.random().toString(36).substr(2, 9);
+        targetNode.dataset.lensId = popover.dataset.targetElementId;
+        targetNode.dataset.origBg = originalBg || '';
+        targetNode.dataset.origOutline = originalOutline || '';
         
         popover.innerHTML = `
             <strong style="color: #60a5fa; font-size: 14px;">Focus: "${word.substring(0, 20)}"</strong><br/>
@@ -63,6 +76,7 @@ document.addEventListener('mousemove', (e) => {
     if (popover && popover.style.display === 'block') {
         if (!e.altKey) {
             popover.style.display = 'none';
+            resetLensHighlight();
         } else {
             popover.style.left = (e.pageX + 15) + 'px';
             popover.style.top = (e.pageY + 15) + 'px';
@@ -71,18 +85,35 @@ document.addEventListener('mousemove', (e) => {
 });
 
 document.addEventListener('mouseout', (e) => {
-    const popover = document.getElementById('thought-lens-popover');
-    if (popover) {
-        popover.style.display = 'none';
+    // We only hide if we're moving completely out of a lens-targeted element
+    if (e.target.dataset && e.target.dataset.lensId) {
+        const popover = document.getElementById('thought-lens-popover');
+        if (popover) {
+            popover.style.display = 'none';
+        }
+        resetLensHighlight();
     }
 });
 
 document.addEventListener('keyup', (e) => {
     if (e.key === 'Alt') {
         const popover = document.getElementById('thought-lens-popover');
-        if (popover) popover.style.display = 'none';
+        if (popover) {
+            popover.style.display = 'none';
+        }
+        resetLensHighlight();
     }
 });
+
+function resetLensHighlight() {
+    document.querySelectorAll('[data-lens-id]').forEach(el => {
+        el.style.backgroundColor = el.dataset.origBg || '';
+        el.style.outline = el.dataset.origOutline || '';
+        delete el.dataset.lensId;
+        delete el.dataset.origBg;
+        delete el.dataset.origOutline;
+    });
+}
 
 // Frictionless Voice-to-UI Architecture
 if ('webkitSpeechRecognition' in window) {
