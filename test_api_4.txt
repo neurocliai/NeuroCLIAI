@@ -1,0 +1,6 @@
+{
+  "interactions": [
+    {
+      "severity": "Major",
+      "title": "Concurrent use with other NSAIDs or 5-ASA increases GI bleeding risk",
+      "description": "Naproxen is a COX‑inhibiting NSAID. When taken with other non‑steroidal anti‑inflammatory drugs, such as ibuprofen, diclofenac, or disease‑modifying antirheumatic drugs

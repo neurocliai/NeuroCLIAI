@@ -110,6 +110,10 @@
     </style>
 </head>
 <body>
+    <!-- Mobile Floating Nav Toggle -->
+    <button class="mobile-only" id="mindmap-nav-toggle" style="position: absolute; top: 15px; left: 15px; z-index: 100; background: var(--bg-secondary); border: 1px solid var(--border-color); color: white; width: 40px; height: 40px; border-radius: 8px; cursor: pointer;">
+        <i class="ph ph-list" style="font-size: 1.5rem;"></i>
+    </button>
     <div id="app-layout">
         <div class="sidebar">
             <div class="sidebar-header">
@@ -141,6 +145,21 @@
     </div>
 
     <script>
+        // Mobile Sidebar Toggle
+        const navToggle = document.getElementById('mindmap-nav-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        if (navToggle) {
+            navToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            // Close on click outside
+            document.addEventListener('click', (e) => {
+                if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !navToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        }
+
         // Pan and Zoom Logic
         const container = document.getElementById('canvas-container');
         const layer = document.getElementById('canvas-layer');
