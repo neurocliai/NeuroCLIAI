@@ -1,198 +1,275 @@
-// Thought-Lens (Hover-to-Explain)
+// Thought-Lens (Drag-and-Drop Area Selection)
 
 window.isLensModeActive = false;
-
-function handleLensEvent(e) {
-    if (window.isLensModeActive && e.target && e.target.id !== 'thought-lens-popover' && !e.target.closest('#thought-lens-popover')) {
-        let targetNode = e.target;
-        
-        // Don't trigger on the main body or massive containers to avoid highlighting the whole page
-        if (targetNode.tagName === 'BODY' || targetNode.tagName === 'HTML' || targetNode.id === 'chat-container') {
-            return;
-        }
-
-        let popover = document.getElementById('thought-lens-popover');
-        if (!popover) {
-            popover = document.createElement('div');
-            popover.id = 'thought-lens-popover';
-            popover.style.position = 'absolute';
-            popover.style.background = 'rgba(15, 23, 42, 0.65)';
-            popover.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-            popover.style.color = '#f8fafc';
-            popover.style.padding = '14px';
-            popover.style.borderRadius = '16px';
-            popover.style.zIndex = '99999';
-            popover.style.pointerEvents = 'none';
-            popover.style.backdropFilter = 'blur(20px) saturate(180%)';
-            popover.style.WebkitBackdropFilter = 'blur(20px) saturate(180%)';
-            popover.style.boxShadow = '0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)';
-            popover.style.fontFamily = 'Inter, sans-serif';
-            popover.style.width = '240px';
-            popover.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
-            document.body.appendChild(popover);
-            
-            // Add global hover styles for the buttons
-            const style = document.createElement('style');
-            style.innerHTML = `
-                .lens-action-btn {
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.05);
-                    color: #e2e8f0;
-                    padding: 8px 12px;
-                    border-radius: 20px;
-                    font-size: 12px;
-                    font-weight: 500;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    transition: all 0.2s;
-                    width: 100%;
-                }
-                .lens-action-btn:hover {
-                    background: rgba(255,255,255,0.12);
-                    transform: translateY(-1px);
-                }
-                .lens-highlight {
-                    position: relative;
-                    background-color: rgba(192, 132, 252, 0.25) !important;
-                    border-radius: 4px;
-                    box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.6) !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        // Extract a word from the text content
-        const textContent = targetNode.innerText || targetNode.textContent;
-        if (!textContent || textContent.trim() === '') return;
-        
-        // Only re-render if we moved to a new element
-        if (targetNode.dataset.lensId !== popover.dataset.targetElementId) {
-            resetLensHighlight();
-            
-            const wordMatch = textContent.trim().match(/\b\w+\b/g);
-            const word = wordMatch ? wordMatch[0] : 'element';
-            
-            // Highlight the hovered element temporarily
-            const originalBg = targetNode.style.backgroundColor;
-            const originalOutline = targetNode.style.outline;
-            targetNode.classList.add('lens-highlight');
-            
-            // Save the element so we can reset it on mouseout
-            popover.dataset.targetElementId = Math.random().toString(36).substr(2, 9);
-            targetNode.dataset.lensId = popover.dataset.targetElementId;
-            targetNode.dataset.origBg = originalBg || '';
-            targetNode.dataset.origOutline = originalOutline || '';
-            
-            // Add Google Lens style actions
-            popover.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #c084fc, #818cf8); border-radius: 6px; display: flex; align-items: center; justify-content: center;">
-                            <i class="ph ph-scan" style="color: white; font-size: 14px;"></i>
-                        </div>
-                        <strong style="color: #f8fafc; font-size: 14px; font-weight: 600;">AI Lens</strong>
-                    </div>
-                </div>
-                <div style="color: #94a3b8; font-size: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); line-height: 1.4;">
-                    Scanned: <span style="color: #e2e8f0; font-weight: 500;">"${word.substring(0, 30)}"</span>
-                </div>
-                
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Explain this in more detail: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));">
-                        <i class="ph ph-magnifying-glass" style="color: #60a5fa; font-size: 14px;"></i> Deep Dive
-                    </button>
-                    <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Rewrite this phrase to be more professional: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));">
-                        <i class="ph ph-arrows-clockwise" style="color: #c084fc; font-size: 14px;"></i> Rewrite
-                    </button>
-                    <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Fix any grammatical or logical errors in this: ${word.replace(/'/g, "\\'")}'; document.getElementById('chat-form').dispatchEvent(new Event('submit'));">
-                        <i class="ph ph-wrench" style="color: #fbbf24; font-size: 14px;"></i> Scan & Fix
-                    </button>
-                </div>
-            `;
-            
-            // We'll temporarily allow pointer events on the popover if the mouse moves onto it
-            popover.style.pointerEvents = 'auto';
-        }
-        popover.style.display = 'block';
-    } else if (!window.isLensModeActive) {
-        const popover = document.getElementById('thought-lens-popover');
-        if (popover && popover.style.display === 'block') {
-            popover.style.display = 'none';
-            resetLensHighlight();
-        }
-    }
-}
-
-document.addEventListener('mouseover', handleLensEvent);
-document.addEventListener('mousemove', (e) => {
-    handleLensEvent(e);
-    
-    // Update popover position if it's active and we're not hovering over the popover itself
-    const popover = document.getElementById('thought-lens-popover');
-    if (popover && popover.style.display === 'block' && (!e.target || !e.target.closest('#thought-lens-popover'))) {
-        popover.style.left = (e.pageX + 15) + 'px';
-        popover.style.top = (e.pageY + 15) + 'px';
-    }
-});
-
-document.addEventListener('mouseout', (e) => {
-    // We only hide if we're moving completely out of a lens-targeted element
-    if (e.target.dataset && e.target.dataset.lensId) {
-        // If they are moving into the popover, don't hide it
-        if (e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('#thought-lens-popover')) {
-            return;
-        }
-        
-        const popover = document.getElementById('thought-lens-popover');
-        if (popover) {
-            popover.style.display = 'none';
-        }
-        resetLensHighlight();
-    }
-});
 
 // Setup Lens Toggle Button globally
 window.toggleLensMode = function() {
     window.isLensModeActive = !window.isLensModeActive;
     const lensBtn = document.getElementById('lens-toggle-btn');
-    if (lensBtn) {
-        if (window.isLensModeActive) {
+    
+    if (window.isLensModeActive) {
+        if (lensBtn) {
             lensBtn.style.background = 'rgba(192, 132, 252, 0.2)';
             lensBtn.style.boxShadow = '0 0 10px rgba(192, 132, 252, 0.5)';
-        } else {
+        }
+        enableLensOverlay();
+    } else {
+        if (lensBtn) {
             lensBtn.style.background = 'transparent';
             lensBtn.style.boxShadow = 'none';
-            
-            // Clean up popover if disabling
-            const popover = document.getElementById('thought-lens-popover');
-            if (popover) popover.style.display = 'none';
-            resetLensHighlight();
         }
+        disableLensOverlay();
     }
 };
 
+let startX = 0, startY = 0;
+let isDragging = false;
 
-document.addEventListener('keyup', (e) => {
-    if (e.key === 'Alt') {
-        const popover = document.getElementById('thought-lens-popover');
-        if (popover) {
-            popover.style.display = 'none';
-        }
-        resetLensHighlight();
+function enableLensOverlay() {
+    let overlay = document.getElementById('lens-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'lens-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100vw';
+        overlay.style.height = '100vh';
+        overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
+        overlay.style.cursor = 'crosshair';
+        overlay.style.zIndex = '99997';
+        document.body.appendChild(overlay);
+        
+        // Instruction text
+        const instruction = document.createElement('div');
+        instruction.innerHTML = '<i class="ph ph-scan"></i> Select any text to scan with AI Lens';
+        instruction.style.position = 'absolute';
+        instruction.style.top = '20px';
+        instruction.style.left = '50%';
+        instruction.style.transform = 'translateX(-50%)';
+        instruction.style.background = 'rgba(15, 23, 42, 0.8)';
+        instruction.style.color = '#e2e8f0';
+        instruction.style.padding = '10px 20px';
+        instruction.style.borderRadius = '30px';
+        instruction.style.fontSize = '14px';
+        instruction.style.fontFamily = 'Inter, sans-serif';
+        instruction.style.backdropFilter = 'blur(10px)';
+        instruction.style.display = 'flex';
+        instruction.style.alignItems = 'center';
+        instruction.style.gap = '8px';
+        instruction.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+        overlay.appendChild(instruction);
+        
+        overlay.addEventListener('mousedown', onLensMouseDown);
+        overlay.addEventListener('mousemove', onLensMouseMove);
+        overlay.addEventListener('mouseup', onLensMouseUp);
     }
-});
-
-function resetLensHighlight() {
-    document.querySelectorAll('[data-lens-id]').forEach(el => {
-        el.style.backgroundColor = el.dataset.origBg || '';
-        el.style.outline = el.dataset.origOutline || '';
-        delete el.dataset.lensId;
-        delete el.dataset.origBg;
-        delete el.dataset.origOutline;
-    });
+    overlay.style.display = 'block';
 }
+
+function disableLensOverlay() {
+    const overlay = document.getElementById('lens-overlay');
+    if (overlay) overlay.style.display = 'none';
+    
+    const box = document.getElementById('lens-selection-box');
+    if (box) box.style.display = 'none';
+    
+    const popover = document.getElementById('thought-lens-popover');
+    if (popover) popover.style.display = 'none';
+}
+
+function onLensMouseDown(e) {
+    if (e.target.closest('#thought-lens-popover')) return; // Don't draw if clicking inside popover
+    
+    isDragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    
+    let box = document.getElementById('lens-selection-box');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'lens-selection-box';
+        box.style.position = 'fixed';
+        box.style.border = '2px solid #c084fc';
+        box.style.backgroundColor = 'rgba(192, 132, 252, 0.15)';
+        box.style.borderRadius = '8px';
+        box.style.zIndex = '99998';
+        box.style.pointerEvents = 'none';
+        box.style.boxShadow = '0 0 0 9999px rgba(0, 0, 0, 0.5)'; // Darken outside (Google Lens style effect)
+        // Note: The huge box shadow is a neat trick to darken everything outside the box, but since we already have an overlay, it might compound. Let's just use simple styles.
+        box.style.boxShadow = '0 0 15px rgba(192, 132, 252, 0.4)';
+        document.body.appendChild(box);
+    }
+    
+    box.style.left = startX + 'px';
+    box.style.top = startY + 'px';
+    box.style.width = '0px';
+    box.style.height = '0px';
+    box.style.display = 'block';
+    
+    // Hide popover while drawing
+    const popover = document.getElementById('thought-lens-popover');
+    if (popover) popover.style.display = 'none';
+}
+
+function onLensMouseMove(e) {
+    if (!isDragging) return;
+    
+    const box = document.getElementById('lens-selection-box');
+    if (!box) return;
+    
+    const currentX = e.clientX;
+    const currentY = e.clientY;
+    
+    const left = Math.min(startX, currentX);
+    const top = Math.min(startY, currentY);
+    const width = Math.abs(startX - currentX);
+    const height = Math.abs(startY - currentY);
+    
+    box.style.left = left + 'px';
+    box.style.top = top + 'px';
+    box.style.width = width + 'px';
+    box.style.height = height + 'px';
+}
+
+function onLensMouseUp(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    
+    const box = document.getElementById('lens-selection-box');
+    if (!box || parseInt(box.style.width) < 10 || parseInt(box.style.height) < 10) {
+        // Selection too small, ignore
+        if (box) box.style.display = 'none';
+        return;
+    }
+    
+    const boxRect = box.getBoundingClientRect();
+    
+    // Extract text inside the box
+    let selectedText = extractTextInRect(boxRect);
+    if (!selectedText) {
+        selectedText = "No text detected";
+    } else if (selectedText.length > 100) {
+        selectedText = selectedText.substring(0, 100) + '...';
+    }
+    
+    showLensPopover(boxRect, selectedText);
+}
+
+function extractTextInRect(rect) {
+    let text = "";
+    // Check all text nodes or elements in the chat history
+    const elements = document.querySelectorAll('.message-content p, .message-content span, .message-content h1, .message-content h2, .message-content h3, .message-content li, .message-content code');
+    
+    elements.forEach(el => {
+        const elRect = el.getBoundingClientRect();
+        // Check if rectangles intersect
+        if (!(elRect.right < rect.left || 
+              elRect.left > rect.right || 
+              elRect.bottom < rect.top || 
+              elRect.top > rect.bottom)) {
+            // Element overlaps with selection box
+            text += " " + (el.innerText || el.textContent);
+        }
+    });
+    
+    // Clean up extra spaces
+    return text.replace(/\s+/g, ' ').trim();
+}
+
+function showLensPopover(boxRect, scannedText) {
+    let popover = document.getElementById('thought-lens-popover');
+    if (!popover) {
+        popover = document.createElement('div');
+        popover.id = 'thought-lens-popover';
+        popover.style.position = 'fixed';
+        popover.style.background = 'rgba(15, 23, 42, 0.65)';
+        popover.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        popover.style.color = '#f8fafc';
+        popover.style.padding = '14px';
+        popover.style.borderRadius = '16px';
+        popover.style.zIndex = '99999';
+        popover.style.backdropFilter = 'blur(20px) saturate(180%)';
+        popover.style.WebkitBackdropFilter = 'blur(20px) saturate(180%)';
+        popover.style.boxShadow = '0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1)';
+        popover.style.fontFamily = 'Inter, sans-serif';
+        popover.style.width = '260px';
+        popover.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        document.body.appendChild(popover);
+        
+        // Add global hover styles for the buttons
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .lens-action-btn {
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.05);
+                color: #e2e8f0;
+                padding: 8px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                transition: all 0.2s;
+                width: 100%;
+            }
+            .lens-action-btn:hover {
+                background: rgba(255,255,255,0.12);
+                transform: translateY(-1px);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Position the popover near the selection box (bottom right corner or below)
+    popover.style.left = (boxRect.right + 10) + 'px';
+    popover.style.top = boxRect.top + 'px';
+    
+    // Keep it on screen
+    setTimeout(() => {
+        const popRect = popover.getBoundingClientRect();
+        if (popRect.right > window.innerWidth) {
+            popover.style.left = (boxRect.left - popRect.width - 10) + 'px';
+        }
+        if (popRect.bottom > window.innerHeight) {
+            popover.style.top = (window.innerHeight - popRect.height - 20) + 'px';
+        }
+    }, 0);
+    
+    const safeText = scannedText.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    
+    popover.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #c084fc, #818cf8); border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                    <i class="ph ph-scan" style="color: white; font-size: 14px;"></i>
+                </div>
+                <strong style="color: #f8fafc; font-size: 14px; font-weight: 600;">AI Lens</strong>
+            </div>
+            <button onclick="disableLensOverlay(); window.toggleLensMode();" style="background:transparent; border:none; color: #94a3b8; cursor:pointer;"><i class="ph ph-x"></i></button>
+        </div>
+        <div style="color: #94a3b8; font-size: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); line-height: 1.4;">
+            Scanned: <span style="color: #e2e8f0; font-weight: 500;">"${scannedText}"</span>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Explain this in more detail: ${safeText}'; document.getElementById('chat-form').dispatchEvent(new Event('submit')); disableLensOverlay(); window.toggleLensMode();">
+                <i class="ph ph-magnifying-glass" style="color: #60a5fa; font-size: 14px;"></i> Deep Dive
+            </button>
+            <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Rewrite this to be more professional: ${safeText}'; document.getElementById('chat-form').dispatchEvent(new Event('submit')); disableLensOverlay(); window.toggleLensMode();">
+                <i class="ph ph-arrows-clockwise" style="color: #c084fc; font-size: 14px;"></i> Rewrite
+            </button>
+            <button class="lens-action-btn" onclick="document.getElementById('prompt-input').value = 'Fix any errors in this: ${safeText}'; document.getElementById('chat-form').dispatchEvent(new Event('submit')); disableLensOverlay(); window.toggleLensMode();">
+                <i class="ph ph-wrench" style="color: #fbbf24; font-size: 14px;"></i> Scan & Fix
+            </button>
+        </div>
+    `;
+    
+    popover.style.display = 'block';
+}
+
 
 // Frictionless Voice-to-UI Architecture
 if ('webkitSpeechRecognition' in window) {
