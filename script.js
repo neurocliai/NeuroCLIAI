@@ -1120,6 +1120,36 @@ if (canvasBtn && spatialCanvas) {
     });
 }
 
+// ── Fullscreen toggle (purely additive) ──────────────────────────────────────
+const canvasFullscreenBtn = document.getElementById('canvas-fullscreen-btn');
+const fsIcon = document.getElementById('fs-icon');
+
+if (canvasFullscreenBtn && spatialCanvas) {
+    canvasFullscreenBtn.addEventListener('click', () => {
+        const isFs = spatialCanvas.classList.toggle('fullscreen');
+        // Ensure the canvas is also "open" when entering fullscreen
+        if (isFs) {
+            spatialCanvas.classList.add('open');
+            if (canvasBtn) canvasBtn.classList.add('active');
+            fsIcon.className = 'ph ph-arrows-in';
+            canvasFullscreenBtn.title = 'Exit Fullscreen';
+        } else {
+            fsIcon.className = 'ph ph-arrows-out';
+            canvasFullscreenBtn.title = 'Toggle Fullscreen';
+        }
+    });
+
+    // Exit fullscreen on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && spatialCanvas.classList.contains('fullscreen')) {
+            spatialCanvas.classList.remove('fullscreen');
+            fsIcon.className = 'ph ph-arrows-out';
+            canvasFullscreenBtn.title = 'Toggle Fullscreen';
+        }
+    });
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function extractToCanvas(aiResponse) {
     if (!spatialCanvas || !canvasBoard) return;
     
