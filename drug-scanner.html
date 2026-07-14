@@ -179,17 +179,47 @@ Format your response ENTIRELY in HTML using the following structure for each int
 If only one drug is provided, provide its primary uses, common side effects, and major warnings in the same HTML format. 
 Make sure to use <br> for line breaks and <strong> tags for bold text, NEVER use markdown like **.`;
 
-                const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`);
+                const response = await fetch('https://text.pollinations.ai/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: [{ role: 'user', content: prompt }],
+                        model: 'openai',
+                        stream: false
+                    })
+                });
+
                 let htmlContent = await response.text();
-                
-                // Fallback markdown parsing just in case AI still returns markdown
+
+                // Strip JSON wrapper if the API returned a JSON object instead of plain text
+                try {
+                    const parsed = JSON.parse(htmlContent);
+                    // Handle OpenAI-style response: { choices: [{ message: { content: "..." } }] }
+                    if (parsed.choices?.[0]?.message?.content) {
+                        htmlContent = parsed.choices[0].message.content;
+                    } else if (parsed.content) {
+                        htmlContent = parsed.content;
+                    } else if (typeof parsed === 'object') {
+                        // Last resort: grab any string field that looks like HTML
+                        const vals = Object.values(parsed);
+                        const htmlVal = vals.find(v => typeof v === 'string' && v.includes('<'));
+                        if (htmlVal) htmlContent = htmlVal;
+                    }
+                } catch (e) {
+                    // Not JSON — plain text response, use as-is
+                }
+
+                // Strip markdown code fences
+                htmlContent = htmlContent.replace(/```html/gi, '').replace(/```/g, '');
+
+                // Strip leftover markdown bold/italic
                 htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 htmlContent = htmlContent.replace(/\n- (.*?)(?=\n|$)/g, '<br>• $1');
                 htmlContent = htmlContent.replace(/\n/g, '<br>');
-                
+
                 loadingArea.style.display = 'none';
                 resultsArea.style.display = 'block';
-                
+
                 // Keep the heading but replace the content
                 resultsArea.innerHTML = '<h2 style="margin-top: 0;">Interaction Report</h2>' + htmlContent;
                 
