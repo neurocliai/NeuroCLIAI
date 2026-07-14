@@ -291,7 +291,7 @@
             });
         }
 
-        // --- Helper: Send frame to Pollinations Vision and get text ---
+        // --- Helper: Send frame to NeuroCLI AI Vision engine ---
         async function analyzeFrame(base64Image, prompt) {
             const response = await fetch('https://text.pollinations.ai/', {
                 method: 'POST',

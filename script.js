@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFileExt = null;
 
     // State
-    let chats = JSON.parse(localStorage.getItem('pollinations_chats')) || [];
+    let chats = JSON.parse(localStorage.getItem('neurocli_chats')) || [];
     let currentChatId = null;
     let usageChart = null;
 
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 apiPrompt = `[User attached an image] ${finalPrompt}`;
             }
             // Fetch from NeuroCLI AI
-            if(typeof logToTerminal === 'function') logToTerminal('Encoding payload for text.pollinations.ai...', 'info');
+            if(typeof logToTerminal === 'function') logToTerminal('Encoding payload for NeuroCLI AI engine...', 'info');
             const start = performance.now();
             if(typeof logToTerminal === 'function') logToTerminal('Awaiting response stream...', 'warn');
             const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(apiPrompt)}`);
@@ -669,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function saveChats() {
-        localStorage.setItem('pollinations_chats', JSON.stringify(chats));
+        localStorage.setItem('neurocli_chats', JSON.stringify(chats));
         
         // Sync to backend
         if (window.currentUserUid && currentChatId) {

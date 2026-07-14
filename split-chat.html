@@ -162,7 +162,7 @@
             const promptLeft = `${sysPromptLeft} User says: ${text}`;
             const promptRight = `${sysPromptRight} User says: ${text}`;
 
-            // Fetch sequentially to prevent IP queue full (429) error from Pollinations API
+            // Fetch sequentially to prevent queue overflow on NeuroCLI AI engine
             try {
                 const resLeft = await fetch(`https://text.pollinations.ai/${encodeURIComponent(promptLeft)}`);
                 if (!resLeft.ok) throw new Error(`HTTP ${resLeft.status}`);
