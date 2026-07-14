@@ -364,9 +364,17 @@ Do not include any reasoning, markdown formatting, or HTML tags in the JSON. If 
                 // Parse the actual interactions data
                 let interactions = JSON.parse(jsonString);
                 
-                // Handle case where AI returns a single object instead of an array
+                // Handle cases where AI doesn't return a direct array
                 if (!Array.isArray(interactions)) {
-                    interactions = [interactions];
+                    if (interactions.interactions && Array.isArray(interactions.interactions)) {
+                        interactions = interactions.interactions;
+                    } else if (interactions.severity) {
+                        interactions = [interactions];
+                    } else {
+                        // Look for any array inside the object as a fallback
+                        const nestedArray = Object.values(interactions).find(v => Array.isArray(v));
+                        interactions = nestedArray ? nestedArray : [interactions];
+                    }
                 }
 
                 let finalHtml = '';
