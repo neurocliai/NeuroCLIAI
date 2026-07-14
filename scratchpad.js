@@ -115,43 +115,44 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         const base64Data = imageDataUrl.split(',')[1];
 
-        const prompt = "You are an expert AI assistant. Look at this drawing/scratchpad and answer any questions written on it, solve any math/code problems, or explain the diagram. Output beautifully formatted markdown. Be concise.";
-        
-        // Send directly to Pollinations AI instead of local Python backend
-        const response = await fetch('https://text.pollinations.ai/', {
+        let apiKey = localStorage.getItem('GEMINI_API_KEY');
+        if (!apiKey) {
+            apiKey = prompt('NeuroCLI AI: Please enter your Gemini API Key to use Vision Scratchpad (it will be saved locally):');
+            if (!apiKey) throw new Error("API Key is required to use the AI Scratchpad.");
+            localStorage.setItem('GEMINI_API_KEY', apiKey);
+        }
+
+        const promptText = "You are an advanced interactive AI assistant connected to a visual scratchpad. The user has hand-drawn something, written a math equation, or sketched a UI layout. Carefully analyze the image and execute the intent. If it looks like code, write the code. If it looks like math, solve it. If it looks like a UI wireframe description, provide HTML/CSS. If it's just a regular drawing, describe it. Format your output in beautifully styled Markdown.";
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'openai',
-                messages: [
-                    {
-                        role: 'user',
-                        content: [
-                            { type: 'text', text: prompt },
-                            { type: 'image_url', image_url: { url: imageDataUrl } }
-                        ]
-                    }
-                ]
+                contents: [{
+                    parts: [
+                        { text: promptText },
+                        {
+                            inlineData: {
+                                mimeType: "image/jpeg",
+                                data: base64Data
+                            }
+                        }
+                    ]
+                }]
             })
         });
 
+        const data = await response.json();
+        
         if (!response.ok) {
-            throw new Error(`API Error: ${response.status}`);
-        }
-        
-        let aiText = await response.text();
-        
-        // Parse JSON wrapper if needed
-        try {
-            const parsed = JSON.parse(aiText);
-            if (parsed.choices?.[0]?.message?.content) {
-                aiText = parsed.choices[0].message.content;
-            } else if (parsed.content) {
-                aiText = parsed.content;
+            if (response.status === 400 && data.error && data.error.message.includes('API key not valid')) {
+                localStorage.removeItem('GEMINI_API_KEY');
+                throw new Error("Invalid API Key. Please refresh and try again.");
             }
-        } catch (e) {
-            // Already plain text markdown
+            throw new Error(data.error?.message || "Failed to analyze image via Gemini API");
         }
+        
+        const aiText = data.candidates[0].content.parts[0].text;
 
         // Render Markdown
         resultsPanel.innerHTML = `
@@ -169,7 +170,8 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
             <div class="empty-state" style="color: #ef4444;">
                 <i class="ph ph-warning-circle"></i>
                 <p>Analysis failed: ${error.message}</p>
-                <p style="font-size:12px; margin-top:10px; color: var(--text-muted);">Please try again.</p>
+                <button onclick="localStorage.removeItem('GEMINI_API_KEY'); location.reload();" style="margin-top: 15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Reset API Key</button>
+            </div>
             </div>
         `;
     }
