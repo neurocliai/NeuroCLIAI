@@ -115,20 +115,43 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         const base64Data = imageDataUrl.split(',')[1];
 
-        // Send to our secure Python backend
-        const response = await fetch('/api/analyze-scribble', {
+        const prompt = "You are an expert AI assistant. Look at this drawing/scratchpad and answer any questions written on it, solve any math/code problems, or explain the diagram. Output beautifully formatted markdown. Be concise.";
+        
+        // Send directly to Pollinations AI instead of local Python backend
+        const response = await fetch('https://text.pollinations.ai/', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64Data })
+            body: JSON.stringify({
+                model: 'openai',
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            { type: 'text', text: prompt },
+                            { type: 'image_url', image_url: { url: imageDataUrl } }
+                        ]
+                    }
+                ]
+            })
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || "Failed to analyze image via backend");
+            throw new Error(`API Error: ${response.status}`);
         }
         
-        const data = await response.json();
-        const aiText = data.markdown;
+        let aiText = await response.text();
+        
+        // Parse JSON wrapper if needed
+        try {
+            const parsed = JSON.parse(aiText);
+            if (parsed.choices?.[0]?.message?.content) {
+                aiText = parsed.choices[0].message.content;
+            } else if (parsed.content) {
+                aiText = parsed.content;
+            }
+        } catch (e) {
+            // Already plain text markdown
+        }
 
         // Render Markdown
         resultsPanel.innerHTML = `
@@ -146,7 +169,7 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
             <div class="empty-state" style="color: #ef4444;">
                 <i class="ph ph-warning-circle"></i>
                 <p>Analysis failed: ${error.message}</p>
-                <p style="font-size:12px; margin-top:10px; color: var(--text-muted);">Ensure the backend server is running and the GEMINI_API_KEY is in .env.</p>
+                <p style="font-size:12px; margin-top:10px; color: var(--text-muted);">Please try again.</p>
             </div>
         `;
     }
