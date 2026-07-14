@@ -118,7 +118,7 @@
                                 </div>
                                 <button type="button" id="remove-file-btn" class="icon-btn remove-file-btn"><i class="ph ph-x"></i></button>
                             </div>
-                            <button type="button" id="lens-toggle-btn" class="icon-btn lens-btn" title="Toggle Premium AI Lens" style="color: #c084fc;"><i class="ph ph-scan"></i></button>
+                            <button type="button" id="lens-toggle-btn" class="icon-btn lens-btn" title="Toggle Premium AI Lens" onclick="toggleLensMode()" style="color: #c084fc; font-size: 1.4rem; padding: 8px; margin: 0 4px; display: flex; align-items: center; justify-content: center; z-index: 10; border-radius: 8px;"><i class="ph ph-scan" style="pointer-events: none;"></i></button>
                             <button type="button" id="upload-btn" class="icon-btn upload-btn" title="Upload File"><i class="ph ph-paperclip"></i></button>
                             <input type="file" id="file-input" accept="image/*,.pdf,.docx,.xlsx,.pptx,.csv,.txt" style="display: none;">
                             <textarea id="prompt-input" placeholder="Message NeuroCLI AI..." rows="1"></textarea>

@@ -131,25 +131,25 @@ document.addEventListener('mouseout', (e) => {
     }
 });
 
-// Setup Lens Toggle Button
-const lensBtn = document.getElementById('lens-toggle-btn');
-if (lensBtn) {
-    lensBtn.addEventListener('click', () => {
-        window.isLensModeActive = !window.isLensModeActive;
+// Setup Lens Toggle Button globally
+window.toggleLensMode = function() {
+    window.isLensModeActive = !window.isLensModeActive;
+    const lensBtn = document.getElementById('lens-toggle-btn');
+    if (lensBtn) {
         if (window.isLensModeActive) {
             lensBtn.style.background = 'rgba(192, 132, 252, 0.2)';
             lensBtn.style.boxShadow = '0 0 10px rgba(192, 132, 252, 0.5)';
         } else {
-            lensBtn.style.background = '';
-            lensBtn.style.boxShadow = '';
+            lensBtn.style.background = 'transparent';
+            lensBtn.style.boxShadow = 'none';
             
             // Clean up popover if disabling
             const popover = document.getElementById('thought-lens-popover');
             if (popover) popover.style.display = 'none';
             resetLensHighlight();
         }
-    });
-}
+    }
+};
 
 
 document.addEventListener('keyup', (e) => {
