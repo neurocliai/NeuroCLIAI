@@ -115,12 +115,8 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
         const imageDataUrl = canvas.toDataURL('image/jpeg');
         const base64Data = imageDataUrl.split(',')[1];
 
-        let apiKey = localStorage.getItem('GEMINI_API_KEY');
-        if (!apiKey) {
-            apiKey = prompt('NeuroCLI AI: Please enter your Gemini API Key to use Vision Scratchpad (it will be saved locally):');
-            if (!apiKey) throw new Error("API Key is required to use the AI Scratchpad.");
-            localStorage.setItem('GEMINI_API_KEY', apiKey);
-        }
+        // Hardcoded API Key for seamless production experience
+        const apiKey = "AIzaSyA_zGsrWGhICMpiOvXAfo17g0UECpLHTXI";
 
         const promptText = "You are an advanced interactive AI assistant connected to a visual scratchpad. The user has hand-drawn something, written a math equation, or sketched a UI layout. Carefully analyze the image and execute the intent. If it looks like code, write the code. If it looks like math, solve it. If it looks like a UI wireframe description, provide HTML/CSS. If it's just a regular drawing, describe it. Format your output in beautifully styled Markdown.";
 
@@ -170,8 +166,6 @@ document.getElementById('analyze-btn').addEventListener('click', async () => {
             <div class="empty-state" style="color: #ef4444;">
                 <i class="ph ph-warning-circle"></i>
                 <p>Analysis failed: ${error.message}</p>
-                <button onclick="localStorage.removeItem('GEMINI_API_KEY'); location.reload();" style="margin-top: 15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Reset API Key</button>
-            </div>
             </div>
         `;
     }
