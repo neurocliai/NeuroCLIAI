@@ -126,6 +126,8 @@
         let recordedChunks = [];
         let recognition;
         let fullTranscriptText = "";
+        let recordingStartTime = 0;
+        let recordingDuration = 0;
         
         // Initialize Speech Recognition
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -203,6 +205,9 @@
                     };
 
                     mediaRecorder.onstop = function() {
+                        if (recordingStartTime > 0) {
+                            recordingDuration = (Date.now() - recordingStartTime) / 1000;
+                        }
                         const blob = new Blob(recordedChunks, { type: 'video/webm' });
                         const videoUrl = URL.createObjectURL(blob);
                         
@@ -224,6 +229,7 @@
                     };
 
                     mediaRecorder.start();
+                    recordingStartTime = Date.now();
                     
                     if (recognition) {
                         recognition.start();
@@ -305,7 +311,18 @@
                     ]
                 })
             });
-            return await response.text();
+            
+            let textOutput = await response.text();
+            try {
+                const parsed = JSON.parse(textOutput);
+                if (parsed.choices?.[0]?.message?.content) {
+                    textOutput = parsed.choices[0].message.content;
+                } else if (parsed.content) {
+                    textOutput = parsed.content;
+                }
+            } catch (e) { } // Not JSON, use as plain text
+            
+            return textOutput;
         }
 
         async function generateSummary() {
@@ -332,7 +349,9 @@
                 // --- Step 1: Analyze video frames if a recording exists ---
                 if (hasVideo) {
                     emptySummary.innerHTML = '<i class="ph ph-spinner-gap" style="font-size: 32px; animation: spin 1s linear infinite; color: #14b8a6;"></i><p>Step 1/2: Analyzing video frames...</p>';
-                    const duration = videoEl.duration || 0;
+                    // Fix for Chrome WebM Infinity duration bug
+                    const duration = (videoEl.duration && videoEl.duration !== Infinity) ? videoEl.duration : (recordingDuration || 5);
+                    
                     const framePromises = [];
                     const maxFrames = Math.min(3, Math.floor(duration / 5) || 1);
                     const interval = duration > 0 ? duration / (maxFrames + 1) : 0;
