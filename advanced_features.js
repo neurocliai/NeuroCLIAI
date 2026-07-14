@@ -3,24 +3,30 @@
 window.isLensModeActive = false;
 
 // Setup Lens Toggle Button globally
-window.toggleLensMode = function() {
-    window.isLensModeActive = !window.isLensModeActive;
+window.toggleLensMode = function(forceClose) {
+    if (forceClose === true) {
+        window.isLensModeActive = false;
+    } else {
+        window.isLensModeActive = !window.isLensModeActive;
+    }
     const lensBtn = document.getElementById('lens-toggle-btn');
     
     if (window.isLensModeActive) {
-        if (lensBtn) {
-            lensBtn.style.background = 'rgba(192, 132, 252, 0.2)';
-            lensBtn.style.boxShadow = '0 0 10px rgba(192, 132, 252, 0.5)';
-        }
+        if (lensBtn) lensBtn.classList.add('active');
         enableLensOverlay();
     } else {
-        if (lensBtn) {
-            lensBtn.style.background = 'transparent';
-            lensBtn.style.boxShadow = 'none';
-        }
+        if (lensBtn) lensBtn.classList.remove('active');
         disableLensOverlay();
     }
 };
+
+// ESC key closes lens from anywhere
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && window.isLensModeActive) {
+        window.toggleLensMode(true);
+    }
+});
+
 
 let startX = 0, startY = 0;
 let isDragging = false;

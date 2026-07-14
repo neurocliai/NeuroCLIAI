@@ -1090,6 +1090,23 @@ textarea::placeholder {
     color: var(--accent-primary);
 }
 
+/* Lens button — purple accent, matches upload-btn layout */
+.lens-btn {
+    color: #c084fc;
+    font-size: 1.25rem;
+}
+
+.lens-btn:hover {
+    color: #e879f9;
+    background: rgba(192, 132, 252, 0.1);
+}
+
+.lens-btn.active {
+    color: #e879f9;
+    background: rgba(192, 132, 252, 0.15);
+    box-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+}
+
 .file-preview-container {
     position: absolute;
     bottom: calc(100% + 10px);
