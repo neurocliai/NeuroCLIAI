@@ -348,41 +348,196 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     function handleVoiceCommand(text) {
         const t = text.toLowerCase().trim();
         
-        // Scroll commands
-        if (t.includes('scroll down') || t.includes('go down')) {
+        // ── PAGE NAVIGATION ────────────────────────────────────────────────
+        const pageRoutes = {
+            // Main chat
+            'go to chat':              'chat.html',
+            'open chat':               'chat.html',
+            'go home':                 'chat.html',
+            'home':                    'chat.html',
+            // Split Co-Pilot
+            'split chat':              'split-chat.html',
+            'co pilot':                'split-chat.html',
+            'copilot':                 'split-chat.html',
+            'split view':              'split-chat.html',
+            // Mind Map / Infinite Canvas
+            'mind map':                'mindmap.html',
+            'infinite canvas':         'mindmap.html',
+            'open canvas':             'mindmap.html',
+            'canvas':                  'mindmap.html',
+            // Voice Studio
+            'voice studio':            'voice-studio.html',
+            'open voice studio':       'voice-studio.html',
+            'go to voice':             'voice-studio.html',
+            // Medical Tools
+            'surgical analyzer':       'surgical-analyzer.html',
+            'open surgical':           'surgical-analyzer.html',
+            'medical imaging':         'medical-imaging.html',
+            'open imaging':            'medical-imaging.html',
+            'symptom checker':         'symptom-checker.html',
+            'check symptoms':          'symptom-checker.html',
+            'drug scanner':            'drug-scanner.html',
+            'scan drugs':              'drug-scanner.html',
+            'drug check':              'drug-scanner.html',
+            // Pro Tools
+            'code analyzer':           'code-analyzer.html',
+            'analyze code':            'code-analyzer.html',
+            'open code':               'code-analyzer.html',
+            'legal analyzer':          'legal-analyzer.html',
+            'open legal':              'legal-analyzer.html',
+            'meeting transcriber':     'meeting-transcriber.html',
+            'transcribe meeting':      'meeting-transcriber.html',
+            'open meeting':            'meeting-transcriber.html',
+            'compliance checker':      'compliance-checker.html',
+            'check compliance':        'compliance-checker.html',
+        };
+        
+        for (const [phrase, url] of Object.entries(pageRoutes)) {
+            if (t.includes(phrase)) {
+                setVoiceTranscript(`🔀 Navigating to ${url.replace('.html', '')}…`);
+                setTimeout(() => { window.location.href = url; }, 600);
+                return true;
+            }
+        }
+        
+        // ── SCROLL COMMANDS ────────────────────────────────────────────────
+        if (t.includes('scroll down') || t.includes('go down') || t.includes('page down')) {
             const c = document.getElementById('chat-container');
-            if (c) c.scrollBy({ top: 300, behavior: 'smooth' });
+            if (c) c.scrollBy({ top: 400, behavior: 'smooth' });
+            setVoiceTranscript('⬇️ Scrolled down');
             return true;
         }
-        if (t.includes('scroll up') || t.includes('go up') || t.includes('scroll to top')) {
+        if (t.includes('scroll up') || t.includes('go up') || t.includes('page up')) {
             const c = document.getElementById('chat-container');
-            if (c) c.scrollBy({ top: -300, behavior: 'smooth' });
+            if (c) c.scrollBy({ top: -400, behavior: 'smooth' });
+            setVoiceTranscript('⬆️ Scrolled up');
+            return true;
+        }
+        if (t.includes('scroll to top') || t.includes('go to top') || t.includes('jump to top')) {
+            const c = document.getElementById('chat-container');
+            if (c) c.scrollTo({ top: 0, behavior: 'smooth' });
+            setVoiceTranscript('⬆️ Scrolled to top');
+            return true;
+        }
+        if (t.includes('scroll to bottom') || t.includes('go to bottom') || t.includes('jump to bottom')) {
+            const c = document.getElementById('chat-container');
+            if (c) c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' });
+            setVoiceTranscript('⬇️ Scrolled to bottom');
             return true;
         }
         
-        // New chat
-        if (t.includes('new chat') || t.includes('start new chat') || t.includes('clear chat')) {
+        // ── CHAT MANAGEMENT ────────────────────────────────────────────────
+        if (t.includes('new chat') || t.includes('start new chat') || t.includes('clear chat') || t.includes('fresh chat')) {
             const btn = document.getElementById('new-chat-btn');
             if (btn) btn.click();
+            setVoiceTranscript('🆕 New chat started!');
             return true;
         }
         
-        // Copy last response
-        if (t.includes('copy last') || t.includes('copy response') || t.includes('copy that')) {
+        if (t.includes('copy last') || t.includes('copy response') || t.includes('copy that') || t.includes('copy the response')) {
             const msgs = document.querySelectorAll('.message.ai .message-content');
             if (msgs.length > 0) {
                 navigator.clipboard.writeText(msgs[msgs.length - 1].innerText).catch(() => {});
+                setVoiceTranscript('📋 Response copied!');
             }
             return true;
         }
         
-        // Toggle lens
-        if (t.includes('open lens') || t.includes('activate lens') || t.includes('ai lens')) {
-            if (typeof window.toggleLensMode === 'function') window.toggleLensMode();
+        if (t.includes('delete last chat') || t.includes('remove last chat')) {
+            const firstHistory = document.querySelector('.history-action-btn.delete');
+            if (firstHistory) firstHistory.click();
             return true;
         }
         
-        // ── Highlight last AI response in a spoken color ─────────────────
+        // ── PANEL TOGGLES ──────────────────────────────────────────────────
+        if (t.includes('open sidebar') || t.includes('show sidebar') || t.includes('toggle sidebar') || t.includes('open menu') || t.includes('show menu')) {
+            const btn = document.getElementById('sidebar-toggle-btn');
+            if (btn) btn.click();
+            setVoiceTranscript('📂 Sidebar toggled');
+            return true;
+        }
+        
+        if (t.includes('open canvas') || t.includes('show canvas') || t.includes('memory canvas') || t.includes('open memory')) {
+            const btn = document.getElementById('canvas-btn');
+            if (btn) btn.click();
+            setVoiceTranscript('🖼️ Canvas toggled');
+            return true;
+        }
+        
+        if (t.includes('developer hud') || t.includes('open hud') || t.includes('show hud') || t.includes('terminal') || t.includes('dev mode')) {
+            const btn = document.getElementById('dev-hud-btn');
+            if (btn) btn.click();
+            setVoiceTranscript('🖥️ Developer HUD toggled');
+            return true;
+        }
+        
+        if (t.includes('open profile') || t.includes('show profile') || t.includes('my profile') || t.includes('account')) {
+            const btn = document.getElementById('profile-btn');
+            if (btn) btn.click();
+            setVoiceTranscript('👤 Profile panel opened');
+            return true;
+        }
+        
+        // ── LENS TOGGLE ────────────────────────────────────────────────────
+        if (t.includes('open lens') || t.includes('activate lens') || t.includes('ai lens') || t.includes('close lens')) {
+            if (typeof window.toggleLensMode === 'function') window.toggleLensMode();
+            setVoiceTranscript('🔍 Lens toggled');
+            return true;
+        }
+        
+        // ── TEXT SIZE COMMANDS ─────────────────────────────────────────────
+        if (t.includes('increase font') || t.includes('bigger text') || t.includes('zoom in') || t.includes('larger text')) {
+            const current = parseFloat(document.body.style.fontSize) || 1;
+            document.body.style.fontSize = Math.min(current + 0.1, 1.5) + 'em';
+            setVoiceTranscript('🔠 Text size increased');
+            return true;
+        }
+        if (t.includes('decrease font') || t.includes('smaller text') || t.includes('zoom out') || t.includes('smaller font')) {
+            const current = parseFloat(document.body.style.fontSize) || 1;
+            document.body.style.fontSize = Math.max(current - 0.1, 0.7) + 'em';
+            setVoiceTranscript('🔡 Text size decreased');
+            return true;
+        }
+        if (t.includes('reset font') || t.includes('default font') || t.includes('normal text size')) {
+            document.body.style.fontSize = '';
+            setVoiceTranscript('✅ Font reset to default');
+            return true;
+        }
+        
+        // ── READ ALOUD ─────────────────────────────────────────────────────
+        if (t.includes('read last') || t.includes('read response') || t.includes('read aloud') || t.includes('speak response')) {
+            const msgs = document.querySelectorAll('.message.ai .message-content');
+            if (msgs.length > 0 && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(msgs[msgs.length - 1].innerText);
+                utter.rate = 1;
+                utter.pitch = 1;
+                window.speechSynthesis.speak(utter);
+                setVoiceTranscript('🔊 Reading aloud…');
+            }
+            return true;
+        }
+        if (t.includes('stop reading') || t.includes('stop speaking') || t.includes('silence') || t.includes('quiet')) {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            setVoiceTranscript('🔇 Stopped reading');
+            return true;
+        }
+        
+        // ── FOCUS INPUT ────────────────────────────────────────────────────
+        if (t.includes('focus input') || t.includes('type message') || t.includes('start typing')) {
+            const input = document.getElementById('prompt-input');
+            if (input) input.focus();
+            setVoiceTranscript('⌨️ Input focused');
+            return true;
+        }
+        
+        // ── HELP OVERLAY ───────────────────────────────────────────────────
+        if (t.includes('voice help') || t.includes('what can i say') || t.includes('show commands') || t.includes('voice commands')) {
+            showVoiceHelp();
+            return true;
+        }
+        
+        // ── HIGHLIGHT ─────────────────────────────────────────────────────
         const colorMap = {
             'yellow':  '#fef08a',
             'red':     '#fca5a5',
@@ -396,46 +551,33 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             'lime':    '#bef264',
         };
         
-        // Match phrases like: "highlight in yellow", "highlight yellow", "make it yellow", "highlight the text in blue"
         const highlightPattern = /highlight|color|colour|mark|make it/i;
         if (highlightPattern.test(t)) {
-            let matchedColor = null;
-            let matchedHex   = null;
-            
             for (const [colorName, hex] of Object.entries(colorMap)) {
                 if (t.includes(colorName)) {
-                    matchedColor = colorName;
-                    matchedHex   = hex;
-                    break;
+                    document.querySelectorAll('.voice-highlighted').forEach(el => {
+                        el.style.backgroundColor = '';
+                        el.style.borderRadius = '';
+                        el.style.padding = '';
+                        el.style.color = '';
+                        el.classList.remove('voice-highlighted');
+                    });
+                    const aiMsgs = document.querySelectorAll('.message.ai .message-content');
+                    if (aiMsgs.length > 0) {
+                        const lastMsg = aiMsgs[aiMsgs.length - 1];
+                        lastMsg.style.transition = 'background-color 0.4s ease';
+                        lastMsg.style.backgroundColor = hex;
+                        lastMsg.style.borderRadius = '8px';
+                        lastMsg.style.padding = '8px';
+                        lastMsg.style.color = '#0f172a';
+                        lastMsg.classList.add('voice-highlighted');
+                        setVoiceTranscript(`✅ Highlighted in ${colorName}!`);
+                    }
+                    return true;
                 }
-            }
-            
-            if (matchedHex) {
-                // Remove any previous highlight first
-                document.querySelectorAll('.voice-highlighted').forEach(el => {
-                    el.style.backgroundColor = '';
-                    el.style.borderRadius = '';
-                    el.style.padding = '';
-                    el.classList.remove('voice-highlighted');
-                });
-                
-                // Apply highlight to the last AI message content
-                const aiMsgs = document.querySelectorAll('.message.ai .message-content');
-                if (aiMsgs.length > 0) {
-                    const lastMsg = aiMsgs[aiMsgs.length - 1];
-                    lastMsg.style.transition = 'background-color 0.4s ease';
-                    lastMsg.style.backgroundColor = matchedHex;
-                    lastMsg.style.borderRadius = '8px';
-                    lastMsg.style.padding = '8px';
-                    lastMsg.style.color = '#0f172a'; // dark text for readability
-                    lastMsg.classList.add('voice-highlighted');
-                    setVoiceTranscript(`✅ Highlighted in ${matchedColor}!`);
-                }
-                return true;
             }
         }
         
-        // Remove highlight command
         if (t.includes('remove highlight') || t.includes('clear highlight') || t.includes('unhighlight')) {
             document.querySelectorAll('.voice-highlighted').forEach(el => {
                 el.style.transition = 'background-color 0.4s ease';
@@ -450,8 +592,74 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         }
         
         return false; // Not a UI command — treat as a chat message
-
     }
+    
+    // ── Voice Help Overlay ─────────────────────────────────────────────────
+    function showVoiceHelp() {
+        let helpPanel = document.getElementById('voice-help-panel');
+        if (helpPanel) { helpPanel.remove(); return; }
+        
+        helpPanel = document.createElement('div');
+        helpPanel.id = 'voice-help-panel';
+        helpPanel.style.cssText = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 24px; z-index: 999999; width: 480px; max-height: 70vh;
+            overflow-y: auto; font-family: Inter, sans-serif; color: #e2e8f0;
+            backdrop-filter: blur(20px); box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        `;
+        helpPanel.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:32px;height:32px;background:linear-gradient(135deg,#10b981,#3b82f6);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                        <i class="ph ph-microphone" style="color:white;font-size:16px;"></i>
+                    </div>
+                    <strong style="font-size:16px;">Voice Commands</strong>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:18px;">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;">
+                <div>
+                    <div style="color:#c084fc;font-weight:600;margin-bottom:8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Navigation</div>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        ${[
+                            ['Go to chat','Main chat page'],
+                            ['Split chat','Split co-pilot'],
+                            ['Mind map','Infinite canvas'],
+                            ['Voice studio','Voice tools'],
+                            ['Code analyzer','Code analysis'],
+                            ['Legal analyzer','Legal tools'],
+                            ['Drug scanner','Drug checks'],
+                            ['Symptom checker','Medical help'],
+                        ].map(([cmd,desc]) => `<div style="padding:6px 10px;background:rgba(255,255,255,0.04);border-radius:8px;"><span style="color:#f8fafc;">"${cmd}"</span><br><span style="color:#64748b;font-size:11px;">${desc}</span></div>`).join('')}
+                    </div>
+                </div>
+                <div>
+                    <div style="color:#60a5fa;font-weight:600;margin-bottom:8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;">Actions</div>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        ${[
+                            ['New chat','Start fresh conversation'],
+                            ['Scroll down / up','Navigate the chat'],
+                            ['Read last response','Speak AI reply aloud'],
+                            ['Stop reading','Stop text-to-speech'],
+                            ['Copy response','Copy to clipboard'],
+                            ['Highlight in yellow','Color last response'],
+                            ['Open lens','Toggle AI Lens'],
+                            ['Open sidebar','Toggle sidebar'],
+                            ['Open canvas','Toggle memory canvas'],
+                            ['Bigger text / Smaller text','Adjust font size'],
+                            ['Open profile','View your profile'],
+                            ['Developer HUD','Toggle dev panel'],
+                        ].map(([cmd,desc]) => `<div style="padding:6px 10px;background:rgba(255,255,255,0.04);border-radius:8px;"><span style="color:#f8fafc;">"${cmd}"</span><br><span style="color:#64748b;font-size:11px;">${desc}</span></div>`).join('')}
+                    </div>
+                </div>
+            </div>
+            <p style="color:#64748b;font-size:11px;text-align:center;margin-top:16px;">Any other phrase is sent directly as a message to the AI</p>
+        `;
+        document.body.appendChild(helpPanel);
+        setVoiceTranscript('📖 Voice commands guide shown');
+    }
+
     
     // ── Speech result handler ──────────────────────────────────────────────
     let lastFinalTranscript = '';
