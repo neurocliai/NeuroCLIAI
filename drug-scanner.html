@@ -123,6 +123,13 @@
         }
         .interaction-card h3 { color: #fca5a5; margin: 0 0 10px 0; display: flex; align-items: center; gap: 8px; }
         .interaction-card p { color: var(--text-secondary); margin: 0; line-height: 1.5; }
+        .interaction-card ul { 
+            color: var(--text-secondary); 
+            margin: 12px 0 0 0; 
+            padding-left: 20px; 
+            line-height: 1.5; 
+        }
+        .interaction-card li { margin-bottom: 6px; }
         
         .loading { display: none; text-align: center; padding: 40px; }
         .loading i { font-size: 2rem; color: #f87171; animation: pulse 1.5s infinite; }
@@ -277,7 +284,7 @@
                 });
                 
                 contentPayload = [
-                    { type: 'text', text: 'Act as a clinical pharmacologist. Extract the medication names from this prescription image, then provide a drug interaction and safety report.\nFormat your response ENTIRELY in HTML using the following structure for each interaction or finding:\n<div class="interaction-card">\n    <h3><i class="ph ph-warning-circle" style="color: #ef4444;"></i> [Severity]: [Drugs involved]</h3>\n    <p>[Detailed explanation of interaction or usage, and clinical recommendations]</p>\n</div>\nIf only one drug is provided, provide its primary uses, common side effects, and major warnings in the same HTML format.\nMake sure to use <br> for line breaks and <strong> tags for bold text, NEVER use markdown like **.' },
+                    { type: 'text', text: 'Act as a clinical pharmacologist. Extract the medication names from this prescription image, then provide a highly detailed, comprehensive drug interaction and safety report.\nFormat your response ENTIRELY in HTML using the following structure for each interaction or finding:\n<div class="interaction-card">\n    <h3><i class="ph ph-warning-circle" style="color: #ef4444;"></i> [Severity]: [Drugs involved]</h3>\n    <p>[Detailed explanation of interaction or usage, and clinical recommendations]</p>\n    <ul><li>[Detailed point 1]</li><li>[Detailed point 2]</li></ul>\n</div>\nIf only one drug is provided, provide its primary uses, common side effects, and major warnings in the same highly detailed HTML format.\nMake sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for bold text, NEVER use markdown. Do not truncate your response; provide full detail.' },
                     { type: 'image_url', image_url: { url: base64Image } }
                 ];
             } else {
@@ -291,14 +298,18 @@
                 loadingArea.style.display = 'block';
                 
                 contentPayload = `Act as a clinical pharmacologist. The user has provided the following medications: "${drugInput}".
-Provide a drug interaction and safety report. 
+Provide a highly detailed, comprehensive drug interaction and safety report. 
 Format your response ENTIRELY in HTML using the following structure for each interaction or finding:
 <div class="interaction-card">
     <h3><i class="ph ph-warning-circle" style="color: #ef4444;"></i> [Severity]: [Drugs involved]</h3>
     <p>[Detailed explanation of interaction or usage, and clinical recommendations]</p>
+    <ul>
+        <li>[Detailed point 1]</li>
+        <li>[Detailed point 2]</li>
+    </ul>
 </div>
-If only one drug is provided, provide its primary uses, common side effects, and major warnings in the same HTML format. 
-Make sure to use <br> for line breaks and <strong> tags for bold text, NEVER use markdown like **.`;
+If only one drug is provided, provide its primary uses, common side effects, and major warnings in the same highly detailed HTML format. 
+Make sure to use HTML lists (<ul>, <li>) for bullet points and <strong> tags for bold text, NEVER use markdown. Do not truncate your response; provide full detail.`;
             }
             
             try {
@@ -337,13 +348,10 @@ Make sure to use <br> for line breaks and <strong> tags for bold text, NEVER use
 
                 // Strip leftover markdown bold/italic
                 htmlContent = htmlContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                htmlContent = htmlContent.replace(/\n- (.*?)(?=\n|$)/g, '<br>• $1');
-                htmlContent = htmlContent.replace(/\n/g, '<br>');
-
+                
                 loadingArea.style.display = 'none';
                 resultsArea.style.display = 'block';
-
-                // Keep the heading but replace the content
+                
                 resultsArea.innerHTML = '<h2 style="margin-top: 0;">Interaction Report</h2>' + htmlContent;
                 
             } catch (err) {
