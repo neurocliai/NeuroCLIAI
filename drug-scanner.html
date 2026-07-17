@@ -327,6 +327,14 @@
         }
 
         function buildReportHTML(interactions) {
+            if (!interactions || interactions.length === 0) {
+                return `<h2 style="margin-top:0;">Interaction Report</h2>
+                <div class="interaction-card" style="border-left-color:#3b82f6;background:rgba(59,130,246,0.08);">
+                    <h3><i class="ph ph-info" style="color:#3b82f6;"></i> [Info] No Interactions Detected</h3>
+                    <p>No significant drug interactions were found between these medications. They appear to be safe to use together under normal circumstances.</p>
+                    <ul><li>Always follow your doctor's prescribed dosage.</li><li>Contact your pharmacist if you experience any unexpected side effects.</li></ul>
+                </div>`;
+            }
             let html = '<h2 style="margin-top:0;">Interaction Report</h2>';
             for (const item of interactions) {
                 const sev = (item.severity || 'info').toLowerCase();
@@ -382,14 +390,39 @@
 
                 // Real-time web context
                 const webInfo = await fetchDrugInfoFromWeb(drugInput);
-                const ctx = webInfo ? `\nWEB CONTEXT: "${webInfo}"\nUse this to identify brand names.` : '';
+                const ctx = webInfo ? `\nADDITIONAL WEB CONTEXT: "${webInfo}"` : '';
 
-                messages = [{ role: 'user', content:
-                    `Act as a clinical pharmacologist. Medications: "${drugInput}".${ctx}\n` +
-                    `If you see an unknown brand name (e.g. Naxdom), infer the active generics (e.g. Naproxen + Domperidone) and analyse those.\n` +
-                    `Return ONLY a valid JSON array. Each element: {"severity":"Major|Moderate|Minor|Info","title":"...","description":"...","points":["..."]}.\n` +
-                    `No markdown, no extra text, no code fences — raw JSON array only.`
-                }];
+                const systemPrompt = `You are an expert clinical pharmacologist specializing in Indian and international medications.
+You MUST know these common Indian brand names and their generics:
+- DOLO 650 / DOLO = Paracetamol (Acetaminophen) 650mg
+- PANTOP 40 / PANTOP40 / PAN 40 = Pantoprazole 40mg (Proton Pump Inhibitor)
+- NEXPRO 40 / NEXPRO40 = Esomeprazole 40mg (Proton Pump Inhibitor)
+- NAXDOM = Naproxen + Domperidone
+- ZERODOL = Aceclofenac + Paracetamol
+- COMBIFLAM = Ibuprofen + Paracetamol
+- OMEZ / OMEPRAZOLE = Omeprazole
+- CROCIN = Paracetamol
+- AUGMENTIN = Amoxicillin + Clavulanate
+- AZITHRAL / ZITHROMAX = Azithromycin
+- VOLINI = Diclofenac topical
+- ECOSPRIN = Aspirin
+For ANY brand name not in this list, identify the active generic ingredient(s) yourself and analyze those.
+NEVER return an empty array. ALWAYS return at least 2-3 findings per drug combination.
+Return ONLY a raw JSON array. No markdown, no code fences, no extra text.`;
+
+                messages = [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content:
+                        `Medications entered: "${drugInput}".${ctx}\n` +
+                        `Task: Identify the generic active ingredients for each brand name above, then:\n` +
+                        `1. List each drug's primary use and key side effects\n` +
+                        `2. Identify any drug-drug interactions between them\n` +
+                        `3. Give dosage and safety recommendations\n` +
+                        `Return a JSON array where each element has:\n` +
+                        `{"severity": "Major|Moderate|Minor|Info", "title": "short title", "description": "clear explanation", "points": ["bullet 1", "bullet 2"]}\n` +
+                        `Return the raw JSON array only — no markdown, no extra text.`
+                    }
+                ];
             }
 
             // ── Try primary model, then fallback ──────────────────────────────
@@ -403,8 +436,12 @@
                         `Scanning with ${model} model…`;
                     const raw = await callPollinationsAPI(messages, model);
                     interactions = extractJSON(raw);
+                    // Treat empty array as failure — retry with next model
+                    if (!interactions || interactions.length === 0) {
+                        throw new Error('API returned empty result — retrying');
+                    }
                     lastError = null;
-                    break; // success — exit loop
+                    break;
                 } catch (err) {
                     lastError = err;
                     console.warn(`Model ${model} failed:`, err.message);
