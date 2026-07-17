@@ -207,7 +207,7 @@
 
         <div class="loading" id="loading">
             <i class="ph ph-spinner"></i>
-            <p style="margin-top: 10px; color: var(--text-secondary);">Cross-referencing pharmacology database...</p>
+            <p style="margin-top: 10px; color: var(--text-secondary);">NeuroCLI AI is scanning your medications…</p>
         </div>
 
         <div class="results-area" id="results">
@@ -433,7 +433,9 @@ Return ONLY a raw JSON array. No markdown, no code fences, no extra text.`;
             for (const model of models) {
                 try {
                     document.querySelector('#loading p').textContent =
-                        `Scanning with ${model} model…`;
+                        models.indexOf(model) === 0
+                            ? 'NeuroCLI AI is scanning your medications…'
+                            : 'NeuroCLI AI is running a deep scan…';
                     const raw = await callPollinationsAPI(messages, model);
                     interactions = extractJSON(raw);
                     // Treat empty array as failure — retry with next model
